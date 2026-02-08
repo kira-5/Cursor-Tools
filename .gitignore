@@ -1,0 +1,12 @@
+# Python
+.venv/
+venv/
+__pycache__/
+*.pyc
+*.pyo
+
+# OS
+.DS_Store
+
+# MCP secrets - do not commit
+*/.db_env

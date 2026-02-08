@@ -1,0 +1,1 @@
+{"databases":{"leslies_dev":"${env:MTP_DB_LESLIES_DEV}","leslies_uat":"${env:MTP_DB_LESLIES_UAT}"}}

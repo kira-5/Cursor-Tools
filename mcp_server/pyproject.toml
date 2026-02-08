@@ -1,0 +1,12 @@
+[project]
+name = "mtp-base-pricing-mcp"
+version = "0.1.0"
+description = "MCP server for mtp-base-pricing backend"
+requires-python = ">=3.10"
+dependencies = [
+    "mcp>=1.0.0",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
