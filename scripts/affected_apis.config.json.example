@@ -1,9 +1,0 @@
-{
-  "app_path": "backend/app",
-  "api_prefix": "/api/v1",
-  "module_to_tag": {
-    "products": "products",
-    "users": "users",
-    "orders": "orders"
-  }
-}
