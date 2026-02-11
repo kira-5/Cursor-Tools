@@ -3,7 +3,7 @@ MCP Server for mtp-base-pricing backend.
 Exposes tools and resources for Cursor to use.
 Copy to other projects; toggle by category via CURSOR_TOOLS_ENABLED env var.
 
-Categories: docs, project_info, db, search, env, git, logs
+Categories: docs, project_info, db, search, env, git, logs, bitbucket
 - docs: get_docs_urls, get_doc, cursor-index, readme, mcp-readme, mcp-setup, mcp-tools-reference, email-template
 - project_info: get_project_info (name, version, Python, tech stack)
 - db: list_databases, run_database_query, run_database_query_from_file, list_tables, describe_table (disable db = all db tools off)
@@ -24,7 +24,7 @@ from mcp.server.fastmcp import FastMCP
 
 # Category-based toggles. Default: all. Omit a category to disable it.
 # docs, project_info, db, search, env, git, logs
-_ENABLED = os.getenv("CURSOR_TOOLS_ENABLED", "docs,project_info,db,search,env,git,logs").split(",")
+_ENABLED = os.getenv("CURSOR_TOOLS_ENABLED", "docs,project_info,db,search,env,git,logs,bitbucket").split(",")
 _ENABLED = {t.strip() for t in _ENABLED if t.strip()}
 
 
@@ -46,6 +46,7 @@ from tools_search import register as register_search
 from tools_env import register as register_env
 from tools_git import register as register_git
 from tools_logs import register as register_logs
+from tools_bitbucket import register as register_bitbucket
 
 register_docs(mcp, _enabled)
 register_project_info(mcp, _enabled)
@@ -54,6 +55,7 @@ register_search(mcp, _enabled)
 register_env(mcp, _enabled)
 register_git(mcp, _enabled)
 register_logs(mcp, _enabled)
+register_bitbucket(mcp, _enabled)
 
 
 def main() -> None:

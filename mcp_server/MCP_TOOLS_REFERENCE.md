@@ -15,6 +15,7 @@ Portable MCP server for MTP projects. Copy `mcp_server/` to another project and 
 | **env** | `tools_env.py` | get_config |
 | **git** | `tools_git.py` | git_status, git_branches, recent_commits |
 | **logs** | `tools_logs.py` | tail_logs, read_log_file |
+| **bitbucket** | `tools_bitbucket.py` | bitbucket_list_repos, bitbucket_get_repo, bitbucket_list_projects, bitbucket_list_pull_requests, bitbucket_get_pull_request, bitbucket_create_pull_request, bitbucket_list_issues, bitbucket_get_issue, bitbucket_create_issue, bitbucket_get_file |
 
 **Disable a category = all tools in that category off.** e.g. disable `db` → list_databases, run_database_query, run_database_query_from_file all disabled.
 
@@ -32,14 +33,14 @@ In `.cursor/mcp.json`, set `CURSOR_TOOLS_ENABLED` to categories you want (comma-
     "env": {
       "PYTHONPATH": "/path/to/project-root",
       "PYTHONUNBUFFERED": "1",
-      "CURSOR_TOOLS_ENABLED": "docs,project_info,db,search,env,git,logs"
+      "CURSOR_TOOLS_ENABLED": "docs,project_info,db,search,env,git,logs,bitbucket"
     }
   }
 }
 ```
 
 **Examples:**
-- `"docs,project_info,db,search,env,git,logs"` — all enabled (default)
+- `"docs,project_info,db,search,env,git,logs,bitbucket"` — all enabled (default)
 - `"docs,project_info"` — no DB tools
 - `"db"` — only DB tools
 - Omit `CURSOR_TOOLS_ENABLED` — all enabled
@@ -87,7 +88,7 @@ MTP_DB_LESLIES_UAT=postgresql://user:pass@host:5432/leslies_uat
     "args": ["-u", "/path/to/mcp_server/server.py"],
     "env": {
       "PYTHONPATH": "/path/to/project",
-      "CURSOR_TOOLS_ENABLED": "docs,project_info,db,search,env,git,logs",
+      "CURSOR_TOOLS_ENABLED": "docs,project_info,db,search,env,git,logs,bitbucket",
       "MTP_DB_PASS": "${env:MTP_DB_PASS}"
     }
   }
