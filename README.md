@@ -1,4 +1,4 @@
-# cursor-tools: The Global Agentic Hub 🚀
+# cursor-tools: The Antigravity-Native Global Agentic Hub 🚀
 
 A centralized Model Context Protocol (MCP) hub and script library designed to be shared across all your development projects.
 
