@@ -11,4 +11,5 @@ __pycache__/
 # MCP secrets - do not commit
 */.db_env
 */.bitbucket_env
+*/.postman_env
 .cursor/

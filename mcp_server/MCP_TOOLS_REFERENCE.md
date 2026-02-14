@@ -16,6 +16,8 @@ Portable MCP server for MTP projects. Copy `mcp_server/` to another project and 
 | **git** | `tools_git.py` | git_status, git_branches, recent_commits |
 | **logs** | `tools_logs.py` | tail_logs, read_log_file |
 | **bitbucket** | `tools_bitbucket.py` | bitbucket_list_repos, bitbucket_get_repo, bitbucket_list_projects, bitbucket_list_pull_requests, bitbucket_get_pull_request, bitbucket_create_pull_request, bitbucket_list_issues, bitbucket_get_issue, bitbucket_create_issue, bitbucket_get_file |
+| **postman** | `tools_postman.py` | postman_list_workspaces, postman_get_workspace, postman_create_workspace, postman_update_workspace, postman_delete_workspace, postman_list_workspace_members, postman_add_workspace_members, postman_remove_workspace_member, postman_list_collections, postman_get_collection, postman_create_collection, postman_update_collection, postman_delete_collection, postman_list_environments, postman_get_environment, postman_create_environment, postman_update_environment, postman_search_collection_items, postman_get_collection_item, postman_add_folder, postman_add_request, postman_update_request, postman_delete_item, postman_rename_folder, postman_delete_folder, postman_run_collection, postman_list_apis, postman_get_api, postman_search_apis, postman_list_mocks, postman_get_mock, postman_list_monitors, postman_get_monitor, postman_run_monitor, postman_generate_code_snippet |
+| **postman_official** | `tools_postman_official.py` | postman_official_docs, postman_official_mcp_config, postman_official_env_status |
 
 **Disable a category = all tools in that category off.** e.g. disable `db` → list_databases, run_database_query, run_database_query_from_file all disabled.
 
@@ -33,14 +35,14 @@ In `.cursor/mcp.json`, set `CURSOR_TOOLS_ENABLED` to categories you want (comma-
     "env": {
       "PYTHONPATH": "/path/to/project-root",
       "PYTHONUNBUFFERED": "1",
-      "CURSOR_TOOLS_ENABLED": "docs,project_info,db,search,env,git,logs,bitbucket"
+      "CURSOR_TOOLS_ENABLED": "docs,project_info,db,search,env,git,logs,bitbucket,postman,postman_official"
     }
   }
 }
 ```
 
 **Examples:**
-- `"docs,project_info,db,search,env,git,logs,bitbucket"` — all enabled (default)
+- `"docs,project_info,db,search,env,git,logs,bitbucket,postman,postman_official"` — all enabled (default)
 - `"docs,project_info"` — no DB tools
 - `"db"` — only DB tools
 - Omit `CURSOR_TOOLS_ENABLED` — all enabled
@@ -95,6 +97,13 @@ MTP_DB_LESLIES_UAT=postgresql://user:pass@host:5432/leslies_uat
 }
 ```
 Or put creds in `mcp_server/.db_env` — mtp-tools loads it automatically. Copy `mcp_server/.db_env.example` to `mcp_server/.db_env`.
+
+**Postman API key**
+
+Put your key in `mcp_server/.postman_env`:
+```
+POSTMAN_API_KEY=your_key_here
+```
 
 ---
 
