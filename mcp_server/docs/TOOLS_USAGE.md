@@ -13,7 +13,6 @@ Click any category below for a detailed guide on available tools, example prompt
 | **docs** | Architectural clarity | [DOCS_USAGE.md](file:///Users/abhisheksingh/Documents/Development/cursor-tools/mcp_server/docs/DOCS_USAGE.md) |
 | **db** | Direct DB insight | [DB_USAGE.md](file:///Users/abhisheksingh/Documents/Development/cursor-tools/mcp_server/docs/DB_USAGE.md) |
 | **postman** | Local Collection Lifecycle | [POSTMAN_USAGE.md](file:///Users/abhisheksingh/Documents/Development/cursor-tools/mcp_server/docs/POSTMAN_USAGE.md) |
-| **postman_official** | Official Cloud Server | [POSTMAN_OFFICIAL_USAGE.md](file:///Users/abhisheksingh/Documents/Development/cursor-tools/mcp_server/docs/POSTMAN_OFFICIAL_USAGE.md) |
 | **bitbucket** | Repository Governance | [BITBUCKET_USAGE.md](file:///Users/abhisheksingh/Documents/Development/cursor-tools/mcp_server/docs/BITBUCKET_USAGE.md) |
 | **git** | Local state & history | [GIT_USAGE.md](file:///Users/abhisheksingh/Documents/Development/cursor-tools/mcp_server/docs/GIT_USAGE.md) |
 | **search** | Precision code grepping | [SEARCH_USAGE.md](file:///Users/abhisheksingh/Documents/Development/cursor-tools/mcp_server/docs/SEARCH_USAGE.md) |
@@ -44,14 +43,14 @@ In `.cursor/mcp.json`, set `CURSOR_TOOLS_ENABLED` to categories you want (comma-
     "env": {
       "PYTHONPATH": "/path/to/project-root",
       "PYTHONUNBUFFERED": "1",
-      "CURSOR_TOOLS_ENABLED": "docs,project_info,db,search,env,git,logs,bitbucket,postman,postman_official"
+      "CURSOR_TOOLS_ENABLED": "docs,project_info,db,search,env,git,logs,bitbucket,postman"
     }
   }
 }
 ```
 
 **Examples:**
-- `"docs,project_info,db,search,env,git,logs,bitbucket,postman,postman_official"` — all enabled (default)
+- `"docs,project_info,db,search,env,git,logs,bitbucket,postman"` — all enabled (default)
 - `"docs,project_info"` — no DB tools
 - `"db"` — only DB tools
 - Omit `CURSOR_TOOLS_ENABLED` — all enabled

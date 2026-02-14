@@ -3,7 +3,7 @@ MCP Server for cursor-tools backend.
 Exposes tools and resources for Cursor to use.
 Copy to other projects; toggle by category via CURSOR_TOOLS_ENABLED env var.
 
-Categories: docs, project_info, db, search, env, git, logs, bitbucket, postman, postman_official
+Categories: docs, project_info, db, search, env, git, logs, bitbucket, postman
 - docs: get_docs_urls, get_doc, cursor-index, readme, mcp-readme, mcp-setup, mcp-tools-reference, email-template
 - project_info: get_project_info (name, version, Python, tech stack)
 - db: list_databases, run_database_query, run_database_query_from_file, list_tables, describe_table (disable db = all db tools off)
@@ -15,19 +15,40 @@ Categories: docs, project_info, db, search, env, git, logs, bitbucket, postman, 
 import os
 from pathlib import Path
 
-# Ensure mcp_server is on path for tools_* imports (works when run as script or module)
+def get_project_root() -> Path:
+    """
+    Detect project root by:
+    1. Checking CURSOR_PROJECT_ROOT env var.
+    2. Searching upwards from CWD for .git or .cursor.
+    3. Fallback to mcp_server's parent.
+    """
+    if env_root := os.getenv("CURSOR_PROJECT_ROOT"):
+        return Path(env_root).resolve()
+        
+    # Search upwards from CWD
+    current = Path.cwd().resolve()
+    for parent in [current] + list(current.parents):
+        if (parent / ".git").exists() or (parent / ".cursor").exists():
+            return parent
+            
+    # Fallback
+    return Path(__file__).resolve().parent.parent
+
+PROJECT_ROOT = get_project_root()
+
+
+# Ensure mcp_server is on path for tools_* imports
 _path = Path(__file__).resolve().parent
-PROJECT_ROOT = _path.parent # Assuming mcp_server is inside the project root
 if str(_path) not in __import__("sys").path:
     __import__("sys").path.insert(0, str(_path))
 
 from mcp.server.fastmcp import FastMCP
 
 # Category-based toggles. Default: all. Omit a category to disable it.
-# docs, project_info, db, search, env, git, logs, bitbucket, postman, postman_official
+# docs, project_info, db, search, env, git, logs, bitbucket, postman
 _ENABLED = os.getenv(
     "CURSOR_TOOLS_ENABLED",
-    "docs,project_info,db,search,env,git,logs,bitbucket,postman,postman_official,google_search,fetch,memory",
+    "docs,project_info,db,search,env,git,logs,bitbucket,postman,google_search,fetch,memory",
 ).split(",")
 _ENABLED = {t.strip() for t in _ENABLED if t.strip()}
 
@@ -39,8 +60,12 @@ def _enabled(category: str) -> bool:
 
 mcp = FastMCP(
     "mtp-tools",
-    instructions="MCP server for the mtp-base-pricing backend project. Use tools to get docs, tech stack, run database queries, and project info.",
+    instructions=(
+        "MCP server for the mtp-base-pricing backend project. "
+        "Use tools to get docs, tech stack, run database queries, and project info."
+    ),
 )
+
 
 # Register tools by category (one file per category)
 from tools_docs import register as register_docs
@@ -52,7 +77,6 @@ from tools_git import register as register_git
 from tools_logs import register as register_logs
 from tools_bitbucket import register as register_bitbucket
 from tools_postman import register as register_postman
-from tools_postman_official import register as register_postman_official
 from tools_google_search import register as register_google_search
 from tools_fetch import register as register_fetch
 from tools_memory import register as register_memory
@@ -66,7 +90,6 @@ register_git(mcp, _enabled)
 register_logs(mcp, _enabled)
 register_bitbucket(mcp, _enabled)
 register_postman(mcp, _enabled)
-register_postman_official(mcp, _enabled)
 register_google_search(mcp, _enabled)
 register_fetch(mcp, _enabled)
 register_memory(mcp, _enabled)
@@ -84,7 +107,7 @@ def mcp_health_check() -> str:
     status.append("\nTool Categories:")
     all_categories = [
         "docs", "project_info", "db", "search", "env",
-        "git", "logs", "bitbucket", "postman", "postman_official",
+        "git", "logs", "bitbucket", "postman",
         "google_search", "fetch", "memory"
     ]
     for cat in all_categories:

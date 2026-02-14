@@ -4,7 +4,17 @@ import re
 from pathlib import Path
 
 _MCP_DIR = Path(__file__).resolve().parent
-PROJECT_ROOT = Path(os.environ.get("CURSOR_PROJECT_ROOT", _MCP_DIR.parent))
+
+def get_project_root() -> Path:
+    if env_root := os.getenv("CURSOR_PROJECT_ROOT"):
+        return Path(env_root).resolve()
+    current = Path.cwd().resolve()
+    for parent in [current] + list(current.parents):
+        if (parent / ".git").exists() or (parent / ".cursor").exists():
+            return parent
+    return _MCP_DIR.parent
+
+PROJECT_ROOT = get_project_root()
 
 
 def _get_version() -> str | None:

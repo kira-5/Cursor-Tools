@@ -121,7 +121,6 @@ One MCP server, query any DB via `run_database_query(sql, database_name?)`.
 | Level | Servers |
 |-------|---------|
 | **Project (Central Hub)** | 1 (cursor-tools: includes Fetch, Memory, Search) |
-| **Project (HTTP)** | 1 (postman-official) |
 
 
 mtp-tools MCP list

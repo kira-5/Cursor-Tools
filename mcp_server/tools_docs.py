@@ -3,7 +3,17 @@ import os
 from pathlib import Path
 
 _MCP_DIR = Path(__file__).resolve().parent
-PROJECT_ROOT = Path(os.environ.get("CURSOR_PROJECT_ROOT", _MCP_DIR.parent))
+
+def get_project_root() -> Path:
+    if env_root := os.getenv("CURSOR_PROJECT_ROOT"):
+        return Path(env_root).resolve()
+    current = Path.cwd().resolve()
+    for parent in [current] + list(current.parents):
+        if (parent / ".git").exists() or (parent / ".cursor").exists():
+            return parent
+    return _MCP_DIR.parent
+
+PROJECT_ROOT = get_project_root()
 
 # Docs that get_doc can read. Paths may be relative to MCP dir or project root.
 _DOC_NAMES = {"cursor-index", "readme", "mcp-readme", "mcp-setup", "mcp-tools-reference", "email-template"}
