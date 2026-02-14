@@ -34,7 +34,7 @@ def register(mcp, enabled_fn):
         case_sensitive: bool = False,
         max_matches: int = 50,
     ) -> str:
-        """Search for regex pattern in code. glob: file pattern (default *.py). Returns file:line:content."""
+        """Search for a regex pattern in the codebase. Use glob (e.g., *.py, **/*.html) to narrow scope. Ideal for finding function definitions or variable usage."""
         if not enabled_fn("search"):
             return "Tool disabled. Enable 'search' in CURSOR_TOOLS_ENABLED (e.g. docs,project_info,db,search)."
         results = []
@@ -65,7 +65,7 @@ def register(mcp, enabled_fn):
         docs_path: str | None = None,
         case_sensitive: bool = False,
     ) -> str:
-        """Search for text in project docs. Default docs path: backend/app/assets/docs/."""
+        """Iterate through project documentation and search for specific text. Use this when global grep is too noisy. Default path: backend/app/assets/docs/."""
         if not enabled_fn("search"):
             return "Tool disabled. Enable 'search' in CURSOR_TOOLS_ENABLED (e.g. docs,project_info,db,search)."
         base = PROJECT_ROOT / (docs_path or "backend/app/assets/docs")

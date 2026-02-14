@@ -13,12 +13,16 @@ def _doc_path(doc_name: str) -> Path:
     mcp_docs = {
         "cursor-index": "cursor-docs-index.json",
         "mcp-readme": "README.md",
-        "mcp-setup": "MCP_SETUP_SUMMARY.md",
-        "mcp-tools-reference": "MCP_TOOLS_REFERENCE.md",
+        "mcp-setup": "docs/SETUP_USAGE.md",
+        "mcp-tools-reference": "docs/TOOLS_USAGE.md",
     }
     if doc_name in mcp_docs:
         return _MCP_DIR / mcp_docs[doc_name]
-    return PROJECT_ROOT / {"readme": "readme.md", "email-template": "EMAIL_TEMPLATE_SAMPLE.html"}.get(
+    if doc_name == "readme":
+        for p in [PROJECT_ROOT / "README.md", PROJECT_ROOT / "readme.md", PROJECT_ROOT / "backend" / "README.md"]:
+            if p.exists():
+                return p
+    return PROJECT_ROOT / {"email-template": "EMAIL_TEMPLATE_SAMPLE.html"}.get(
         doc_name, doc_name
     )
 
@@ -27,7 +31,7 @@ def register(mcp, enabled_fn):
     """Register docs tools/resources. Disabled when 'docs' category is off."""
     @mcp.tool()
     def get_docs_urls(priority: str = "core") -> str:
-        """Get Cursor docs URLs to add. Filter by priority: core, recommended, or optional."""
+        """Get prioritized list of official documentation URLs for Cursor indexing. use priority: core (FastAPI/Pydantic), recommended (SQLAlchemy/GCP), or optional (Dynaconf)."""
         if not enabled_fn("docs"):
             return "Tool disabled. Enable 'docs' in CURSOR_TOOLS_ENABLED (e.g. docs,project_info,db)."
         docs = [
@@ -47,7 +51,7 @@ def register(mcp, enabled_fn):
 
     @mcp.tool()
     def get_doc(doc_name: str) -> str:
-        """Read a project doc. doc_name: cursor-index, readme, mcp-readme, mcp-setup, mcp-tools-reference, email-template."""
+        """Read a project-specific architectural or setup document. available doc_names: cursor-index, readme, mcp-readme, mcp-setup, mcp-tools-reference, email-template."""
         if not enabled_fn("docs"):
             return "Tool disabled. Enable 'docs' in CURSOR_TOOLS_ENABLED."
         if doc_name not in _DOC_NAMES:

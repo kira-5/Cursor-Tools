@@ -1,34 +1,10 @@
 # MCP Setup Summary
 
-## Global Level
+## Project Level (Global Managed via cursor-tools)
 
-**Location:** `~/.cursor/mcp.json`
+**Location:** `.cursor/mcp.json` (in cursor-tools)
 
-| Server | Purpose | Config Required |
-|--------|---------|-----------------|
-| **google-search** | Web search in Cursor | `GOOGLE_API_KEY`, `GOOGLE_CX` |
-
-**Config:**
-```json
-{
-  "mcpServers": {
-    "google-search": {
-      "command": "npx",
-      "args": ["-y", "@modelcontextprotocol/server-google-search"],
-      "env": {
-        "GOOGLE_API_KEY": "YOUR_API_KEY",
-        "GOOGLE_CX": "YOUR_ENGINE_ID"
-      }
-    }
-  }
-}
-```
-
----
-
-## Project Level
-
-**Location:** `.cursor/mcp.json` (in mtp-base-pricing)
+**Location:** `.cursor/mcp.json` (in cursor-tools)
 
 | Server | Purpose |
 |--------|---------|
@@ -43,7 +19,7 @@
       "command": "/path/to/mcp_server/.venv/bin/python",
       "args": ["-u", "/path/to/mcp_server/server.py"],
       "env": {
-        "PYTHONPATH": "/path/to/mtp-base-pricing",
+        "PYTHONPATH": "/path/to/cursor-tools",
         "PYTHONUNBUFFERED": "1",
         "CURSOR_TOOLS_ENABLED": "docs,tech_stack,db"
       }
@@ -81,7 +57,10 @@
 **Toggle categories:** `CURSOR_TOOLS_ENABLED=docs,tech_stack,db` (omit to disable)
 - **docs:** get_docs_urls, cursor-docs-index, readme
 - **tech_stack:** get_tech_stack
-- **db:** list_databases, run_database_query, run_database_query_from_file
+- **db:** list_databases, run_database_query
+- **google_search:** Native web research
+- **fetch:** Native URL to Markdown
+- **memory:** Native project persistence
 
 **Project-related tasks:**
 - **get_docs_urls** – Get Cursor docs URLs (FastAPI, Pydantic, etc.)
@@ -141,9 +120,8 @@ One MCP server, query any DB via `run_database_query(sql, database_name?)`.
 
 | Level | Servers |
 |-------|---------|
-| **Global** | 1 (google-search) |
-| **mtp-base-pricing (project)** | 2 (mtp-tools, leslies-dev-postgres-db) |
-| **mtp-database (project)** | 1 (postgres-db) |
+| **Project (Central Hub)** | 1 (cursor-tools: includes Fetch, Memory, Search) |
+| **Project (HTTP)** | 1 (postman-official) |
 
 
 mtp-tools MCP list

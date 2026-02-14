@@ -1,48 +1,51 @@
-# cursor-tools
+# cursor-tools: The Global Agentic Hub 🚀
 
-Shared MCP server and scripts for Cursor. Use from any project without copying.
+A centralized Model Context Protocol (MCP) hub and script library designed to be shared across all your development projects.
 
-## Structure
+## 🏛️ Architecture
+
+`cursor-tools` acts as a **Single Source of Truth** for your AI tools. Instead of duplicating logic, you point your project-specific `.cursor/mcp.json` back to this directory.
 
 ```
 cursor-tools/
-├── mcp_server/     # MCP server (tools, config)
-└── scripts/        # Utilities (affected_apis, etc.)
+├── mcp_server/     # The "Brain" (FastMCP Hub)
+│   └── docs/       # 13 Detailed Tool Category Guides
+└── scripts/        # Multi-project automation utilities
 ```
 
-## Per-project setup
+## 🛠️ Global Setup
 
-### 1. mcp.json (`.cursor/mcp.json`)
+Initialize the hub once on your system:
+
+```bash
+cd mcp_server
+uv sync   # Recommended
+# or: pip install -r requirements.txt
+```
+
+## 🔗 Connecting Your Projects
+
+To enable this hub in any project, add this block to its `.cursor/mcp.json`:
 
 ```json
 {
-  "cursor-tools": {
-    "command": "/path/to/cursor-tools/mcp_server/.venv/bin/python",
-    "args": ["-u", "/path/to/cursor-tools/mcp_server/server.py"],
-    "env": {
-      "PYTHONPATH": "/path/to/your-project",
-      "CURSOR_PROJECT_ROOT": "/path/to/your-project",
-      "CURSOR_TOOLS_ENABLED": "docs,project_info,db,search,env,git,logs"
+  "mcpServers": {
+    "cursor-tools": {
+      "command": "/absolute/path/to/cursor-tools/mcp_server/.venv/bin/python",
+      "args": ["-u", "/absolute/path/to/cursor-tools/mcp_server/server.py"],
+      "env": {
+        "PYTHONPATH": "/absolute/path/to/cursor-tools/mcp_server",
+        "CURSOR_PROJECT_ROOT": "/absolute/path/to/YOUR_CURRENT_PROJECT",
+        "CURSOR_TOOLS_ENABLED": "docs,project_info,db,search,env,git,logs,bitbucket,postman,google_search,fetch,memory"
+      }
     }
   }
 }
 ```
 
-**Important:** Set `CURSOR_PROJECT_ROOT` to the project root so the MCP server reads that project's code.
+> [!IMPORTANT]
+> Always set `CURSOR_PROJECT_ROOT` to the absolute path of the project you are currently working in.
 
-### 2. .affected_apis.json (in each project root)
+## 📚 Documentation
 
-Each project keeps its own config. See `scripts/.affected_apis.json.example`.
-
-### 3. Cursor commands (`.cursor/commands/`)
-
-Point to the shared script path in affected-apis.md.
-
-## First-time setup
-
-```bash
-cd cursor-tools/mcp_server
-uv sync   # or: pip install -r requirements.txt
-```
-
-Copy `mcp_server/databases.json.example` to `mcp_server/databases.json` and `mcp_server/.db_env.example` to `mcp_server/.db_env` if using DB tools.
+For a full list of tools and how to prompt for them, see the [Master Index](file:///Users/abhisheksingh/Documents/Development/cursor-tools/mcp_server/docs/TOOLS_USAGE.md).

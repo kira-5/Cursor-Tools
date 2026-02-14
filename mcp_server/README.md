@@ -1,42 +1,38 @@
-# mtp-base-pricing MCP Server
+# cursor-tools: MCP Server Registrar
 
-Model Context Protocol server for the mtp-base-pricing backend. Exposes tools and resources for Cursor.
+A high-performance, modular technical hub for the Model Context Protocol. This server exposes the "Agentic Swiss Army Knife" category of tools to Cursor.
 
-## Tools
+## 🛠️ Technical Setup
 
-| Tool | Description |
-|------|-------------|
-| `get_docs_urls` | Get Cursor docs URLs (filter by priority: core, recommended, optional) |
-| `get_project_info` | Get project name, version, Python, tech stack |
-| `get_cursor_docs_index` | Get cursor-docs-index.json (resource) |
-| `get_readme` | Get project README (resource) |
-
-## Setup
+Direct installation for the server component:
 
 ```bash
-cd mcp_server
+# Recommended
 uv sync
-# or: pip install mcp
+
+# Alternate
+pip install -r requirements.txt
 ```
 
-## Add to Cursor
+## 🚀 Testing & Health
 
-The server is already added to `~/.cursor/mcp.json` if you're on this machine.
-
-To add manually: **Cursor Settings** → **Tools & MCP** → **Edit Config** → add to `mcpServers`:
-
-```json
-"mtp-base-pricing": {
-  "command": "/path/to/mtp-base-pricing/mcp_server/.venv/bin/python",
-  "args": ["/path/to/mtp-base-pricing/mcp_server/server.py"]
-}
-```
-
-Use the venv's Python so it doesn't conflict with your backend dependencies. Restart Cursor after adding.
-
-## Test
+Verify the server is running correctly:
 
 ```bash
+# Standard STDIO run
 uv run server.py
-# Or use MCP Inspector: npx -y @modelcontextprotocol/inspector
+
+# MCP Health Check (AI Tool)
+# Trigger in Cursor: "Verify MCP health"
 ```
+
+## 📚 Usage & Reference
+
+For detailed documentation, prompt examples, and best practices for all 13 categories, jump to:
+
+👉 **[Master Tools Index](file:///Users/abhisheksingh/Documents/Development/cursor-tools/mcp_server/docs/TOOLS_USAGE.md)**
+
+---
+
+> [!TIP]
+> This folder is designed for **Portability**. You can copy the entire `mcp_server/` directory into any existing project repository for localized tool support.

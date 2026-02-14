@@ -15,19 +15,17 @@ def _get_version() -> str | None:
         m = re.search(r'version\s*=\s*["\']([^"\']+)["\']', text, re.I)
         if m:
             return m.group(1)
-    pyproject = PROJECT_ROOT / "backend" / "pyproject.toml"
-    if not pyproject.exists():
-        pyproject = PROJECT_ROOT / "pyproject.toml"
-    if pyproject.exists():
-        try:
-            import tomllib
-            with open(pyproject, "rb") as f:
-                data = tomllib.load(f)
-            v = data.get("tool", {}).get("poetry", {}).get("version")
-            if v:
-                return str(v)
-        except Exception:
-            pass
+    for p in [PROJECT_ROOT / "backend" / "pyproject.toml", PROJECT_ROOT / "pyproject.toml"]:
+        if p.exists():
+            try:
+                import tomllib
+                with open(p, "rb") as f:
+                    data = tomllib.load(f)
+                v = data.get("tool", {}).get("poetry", {}).get("version")
+                if v:
+                    return str(v)
+            except Exception:
+                pass
     return None
 
 
@@ -49,18 +47,18 @@ def _get_python_version() -> str | None:
                     return str(py)
             except Exception:
                 pass
-    rv = PROJECT_ROOT / "runtime.txt"
-    if rv.exists():
-        return rv.read_text().strip()
-    pv = PROJECT_ROOT / ".python-version"
-    if pv.exists():
-        return pv.read_text().strip()
+    for p in [PROJECT_ROOT / "runtime.txt", PROJECT_ROOT / "backend" / "runtime.txt"]:
+        if p.exists():
+            return p.read_text().strip()
+    for p in [PROJECT_ROOT / ".python-version", PROJECT_ROOT / "backend" / ".python-version"]:
+        if p.exists():
+            return p.read_text().strip()
     return None
 
 
 def _get_project_name() -> str | None:
     """Get project name from readme or setup.py."""
-    for readme in [PROJECT_ROOT / "readme.md", PROJECT_ROOT / "README.md"]:
+    for readme in [PROJECT_ROOT / "readme.md", PROJECT_ROOT / "README.md", PROJECT_ROOT / "backend" / "README.md"]:
         if readme.exists():
             first = readme.read_text().splitlines()[0].strip()
             if first.startswith("#"):

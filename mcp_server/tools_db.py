@@ -86,7 +86,7 @@ def register(mcp, enabled_fn):
     """Register db tools. Disabled when 'db' category is off. Disabling db turns off all: list_databases, run_database_query, run_database_query_from_file, list_tables, describe_table."""
     @mcp.tool()
     def list_databases() -> str:
-        """List available database names from mcp_server/databases.json. Use these names with run_database_query."""
+        """List all available database connections defined in mcp_server/databases.json. Use these names as targets for SQL queries."""
         if not enabled_fn("db"):
             return "Tool disabled. Enable 'db' in CURSOR_TOOLS_ENABLED (e.g. docs,project_info,db)."
         dbs = _load_databases()
@@ -96,7 +96,7 @@ def register(mcp, enabled_fn):
 
     @mcp.tool()
     def run_database_query(sql: str | None = None, database_name: str | None = None, output_file: str | None = "queries/result.md") -> str:
-        """Run a read-only SQL query. Pass sql to execute; if sql is empty/omitted and database_name is given, uses project's queries/query.sql. If database_name omitted, uses TENANT_NAME_DEPLOYMENT_ENV from .secrets.toml. Pass output_file (e.g. queries/result.md) to write results to a file—open in a new tab to view outside chat. Pass empty string to skip file output."""
+        """Execute a read-only SQL query against a target database. If sql is omitted, reads from queries/query.sql. Results are returned as Markdown tables and optionally written to output_file."""
         if not enabled_fn("db"):
             return "Tool disabled. Enable 'db' in CURSOR_TOOLS_ENABLED (e.g. docs,project_info,db)."
         import psycopg2
@@ -137,7 +137,10 @@ def register(mcp, enabled_fn):
                         return result
                     return f"Database: {database_name}\n{cur.rowcount} rows affected"
         except Exception as e:
-            return f"Error: {e}"
+            msg = f"Database connection/query error: {e}"
+            if "connection refused" in str(e).lower():
+                msg += "\n\nTip: Verification failed. Is the DB host reachable from your current network (VPN required?)"
+            return msg
 
     @mcp.tool()
     def run_database_query_from_file(database_name: str | None = None, file_path: str | None = None) -> str:
