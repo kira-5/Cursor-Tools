@@ -17,5 +17,5 @@ Cross-chat context persistence: Let the AI remember facts, patterns, and prefere
 
 ## 🚀 Best Practices
 - Use `store_memory` for "knowledge injection" that you don't want to repeat every time you open a new chat.
-- Memories are stored locally in `mcp_server/.memory.json`. 
+- Memories are stored locally in `mcp_server/.memory.json`.
 - Periodically use `list_memories` to clean up old or redundant entries.

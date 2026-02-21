@@ -1,8 +1,10 @@
 """Docs category: get_docs_urls, get_doc, cursor-docs-index, readme, etc."""
+
 import os
 from pathlib import Path
 
 _MCP_DIR = Path(__file__).resolve().parent
+
 
 def get_project_root() -> Path:
     if env_root := os.getenv("CURSOR_PROJECT_ROOT"):
@@ -13,10 +15,18 @@ def get_project_root() -> Path:
             return parent
     return _MCP_DIR.parent
 
+
 PROJECT_ROOT = get_project_root()
 
 # Docs that get_doc can read. Paths may be relative to MCP dir or project root.
-_DOC_NAMES = {"cursor-index", "readme", "mcp-readme", "mcp-setup", "mcp-tools-reference", "email-template"}
+_DOC_NAMES = {
+    "cursor-index",
+    "readme",
+    "mcp-readme",
+    "mcp-setup",
+    "mcp-tools-reference",
+    "email-template",
+}
 
 
 def _doc_path(doc_name: str) -> Path:
@@ -29,30 +39,65 @@ def _doc_path(doc_name: str) -> Path:
     if doc_name in mcp_docs:
         return _MCP_DIR / mcp_docs[doc_name]
     if doc_name == "readme":
-        for p in [PROJECT_ROOT / "README.md", PROJECT_ROOT / "readme.md", PROJECT_ROOT / "backend" / "README.md"]:
+        for p in [
+            PROJECT_ROOT / "README.md",
+            PROJECT_ROOT / "readme.md",
+            PROJECT_ROOT / "backend" / "README.md",
+        ]:
             if p.exists():
                 return p
-    return PROJECT_ROOT / {"email-template": "EMAIL_TEMPLATE_SAMPLE.html"}.get(
-        doc_name, doc_name
-    )
+    return PROJECT_ROOT / {"email-template": "EMAIL_TEMPLATE_SAMPLE.html"}.get(doc_name, doc_name)
 
 
 def register(mcp, enabled_fn):
     """Register docs tools/resources. Disabled when 'docs' category is off."""
+
     @mcp.tool()
     def get_docs_urls(priority: str = "core") -> str:
         """Get prioritized list of official documentation URLs for Cursor indexing. use priority: core (FastAPI/Pydantic), recommended (SQLAlchemy/GCP), or optional (Dynaconf)."""
         if not enabled_fn("docs"):
             return "Tool disabled. Enable 'docs' in CURSOR_TOOLS_ENABLED (e.g. docs,project_info,db)."
         docs = [
-            {"name": "FastAPI", "url": "https://fastapi.tiangolo.com/", "priority": "core"},
-            {"name": "Pydantic", "url": "https://docs.pydantic.dev/", "priority": "core"},
-            {"name": "SQLAlchemy", "url": "https://docs.sqlalchemy.org/", "priority": "core"},
-            {"name": "asyncpg", "url": "https://magicstack.github.io/asyncpg/", "priority": "recommended"},
-            {"name": "Uvicorn", "url": "https://www.uvicorn.org/", "priority": "recommended"},
-            {"name": "Google Pub/Sub", "url": "https://cloud.google.com/pubsub/docs", "priority": "recommended"},
-            {"name": "Google BigQuery", "url": "https://cloud.google.com/bigquery/docs", "priority": "recommended"},
-            {"name": "Dynaconf", "url": "https://www.dynaconf.com/", "priority": "optional"},
+            {
+                "name": "FastAPI",
+                "url": "https://fastapi.tiangolo.com/",
+                "priority": "core",
+            },
+            {
+                "name": "Pydantic",
+                "url": "https://docs.pydantic.dev/",
+                "priority": "core",
+            },
+            {
+                "name": "SQLAlchemy",
+                "url": "https://docs.sqlalchemy.org/",
+                "priority": "core",
+            },
+            {
+                "name": "asyncpg",
+                "url": "https://magicstack.github.io/asyncpg/",
+                "priority": "recommended",
+            },
+            {
+                "name": "Uvicorn",
+                "url": "https://www.uvicorn.org/",
+                "priority": "recommended",
+            },
+            {
+                "name": "Google Pub/Sub",
+                "url": "https://cloud.google.com/pubsub/docs",
+                "priority": "recommended",
+            },
+            {
+                "name": "Google BigQuery",
+                "url": "https://cloud.google.com/bigquery/docs",
+                "priority": "recommended",
+            },
+            {
+                "name": "Dynaconf",
+                "url": "https://www.dynaconf.com/",
+                "priority": "optional",
+            },
         ]
         filtered = [d for d in docs if d["priority"] == priority]
         if not filtered:

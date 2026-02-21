@@ -1,4 +1,5 @@
 """Logs category: tail_logs, read_log_file. Default: logs/app.log."""
+
 import os
 from pathlib import Path
 

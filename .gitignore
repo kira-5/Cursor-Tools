@@ -13,3 +13,5 @@ __pycache__/
 */.bitbucket_env
 */.postman_env
 .cursor/
+# Python Virtual Environment (mcp_server)
+mcp_server/.venv-mcp_server/

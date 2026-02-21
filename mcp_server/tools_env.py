@@ -1,4 +1,5 @@
 """Env/Config category: get_config."""
+
 import os
 from pathlib import Path
 
@@ -7,8 +8,7 @@ PROJECT_ROOT = Path(os.environ.get("CURSOR_PROJECT_ROOT", _MCP_DIR.parent))
 
 # Keys (case-insensitive) whose values should be masked
 _SENSITIVE_KEYS = frozenset(
-    k.lower()
-    for k in ("password", "secret", "key", "token", "credential", "api_key", "apikey")
+    k.lower() for k in ("password", "secret", "key", "token", "credential", "api_key", "apikey")
 )
 
 
@@ -22,6 +22,7 @@ def _mask_value(key: str, value: str) -> str:
 def _load_toml_safe(path: Path) -> dict:
     """Load TOML, masking sensitive values."""
     import tomllib
+
     with open(path, "rb") as f:
         data = tomllib.load(f)
     result = {}
@@ -82,4 +83,5 @@ def register(mcp, enabled_fn):
         except Exception as e:
             return f"Error reading config: {e}"
         import json
+
         return json.dumps(data, indent=2)

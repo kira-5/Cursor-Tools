@@ -1,4 +1,5 @@
 """Bitbucket category: repos, projects, PRs, issues, files."""
+
 import base64
 import json
 import os
@@ -26,7 +27,7 @@ def _get_auth_headers() -> tuple[dict, str | None]:
     password = os.environ.get("BITBUCKET_PASSWORD")
     if not username or not password:
         return {}, "Missing BITBUCKET_USERNAME or BITBUCKET_PASSWORD."
-    token = base64.b64encode(f"{username}:{password}".encode("utf-8")).decode("utf-8")
+    token = base64.b64encode(f"{username}:{password}".encode()).decode("utf-8")
     return {"Authorization": f"Basic {token}"}, None
 
 
@@ -188,7 +189,11 @@ def register(mcp, enabled_fn):
         if not enabled_fn("bitbucket"):
             return "Tool disabled. Enable 'bitbucket' in CURSOR_TOOLS_ENABLED."
         params = {"state": state, "pagelen": 50}
-        ok, values = _fetch_values(f"/repositories/{workspace}/{repo_slug}/pullrequests", params=params, max_pages=max_pages)
+        ok, values = _fetch_values(
+            f"/repositories/{workspace}/{repo_slug}/pullrequests",
+            params=params,
+            max_pages=max_pages,
+        )
         if not ok:
             return values
         data = [_trim_pr(pr) for pr in values]
@@ -234,7 +239,11 @@ def register(mcp, enabled_fn):
         if not enabled_fn("bitbucket"):
             return "Tool disabled. Enable 'bitbucket' in CURSOR_TOOLS_ENABLED."
         params = {"state": state, "pagelen": 50}
-        ok, values = _fetch_values(f"/repositories/{workspace}/{repo_slug}/issues", params=params, max_pages=max_pages)
+        ok, values = _fetch_values(
+            f"/repositories/{workspace}/{repo_slug}/issues",
+            params=params,
+            max_pages=max_pages,
+        )
         if not ok:
             return values
         data = [_trim_issue(i) for i in values]

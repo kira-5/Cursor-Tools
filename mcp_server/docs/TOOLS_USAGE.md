@@ -83,8 +83,8 @@ Use env var interpolation so the same `mcp.json` works for the team while each p
 
 **In `mcp_server/.db_env`** — full connection string per DB (copy from `mcp_server/.db_env.example`):
 ```
-MTP_DB_LESLIES_DEV=postgresql://user:pass@host:5432/leslies_dev
-MTP_DB_LESLIES_UAT=postgresql://user:pass@host:5432/leslies_uat
+MTP_DB_LESLIES_DEV=postgresql://user:pass@host:port/db_name  # pragma: allowlist secret
+MTP_DB_LESLIES_UAT=postgresql://user:pass@host:port/db_name  # pragma: allowlist secret
 # Add one line per DB
 ```
 

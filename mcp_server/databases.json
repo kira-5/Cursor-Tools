@@ -1,1 +1,16 @@
-{"databases":{"leslies_dev":"${env:MTP_DB_LESLIES_DEV}","leslies_uat":"${env:MTP_DB_LESLIES_UAT}"}}
+{
+  "databases": {
+    "leslies_dev": "${env:MTP_DB_LESLIES_DEV}",
+    "leslies_test": "${env:MTP_DB_LESLIES_TEST}",
+    "leslies_uat": "${env:MTP_DB_LESLIES_UAT}",
+    "leslies_prod": "${env:MTP_DB_LESLIES_PROD}",
+    "cb_dev": "${env:MTP_DB_CB_DEV}",
+    "cb_test": "${env:MTP_DB_CB_TEST}",
+    "cb_uat": "${env:MTP_DB_CB_UAT}",
+    "cb_prod": "${env:MTP_DB_CB_PROD}",
+    "balsam_dev": "${env:MTP_DB_BALSAM_DEV}",
+    "balsam_test": "${env:MTP_DB_BALSAM_TEST}",
+    "balsam_uat": "${env:MTP_DB_BALSAM_UAT}",
+    "balsam_prod": "${env:MTP_DB_BALSAM_PROD}"
+  }
+}

@@ -26,7 +26,7 @@
     },
     "leslies-dev-postgres-db": {
       "command": "npx",
-      "args": ["-y", "@modelcontextprotocol/server-postgres", "postgresql://user:pass@host:port/dbname"]
+      "args": ["-y", "@modelcontextprotocol/server-postgres", "postgresql://user:pass@host:port/dbname"]  # pragma: allowlist secret
     }
   }
 }
@@ -85,13 +85,13 @@ Configure multiple databases in `mcp_server/databases.json` (see `mcp_server/dat
 ```json
 {
   "databases": {
-    "leslies_dev": "postgresql://user:pass@host:port/dbname",
-    "another_db": "postgresql://user:pass@host:port/dbname"
+    "leslies_dev": "postgresql://user:pass@host:port/dbname",  # pragma: allowlist secret
+    "another_db": "postgresql://user:pass@host:port/dbname"  # pragma: allowlist secret
   }
 }
 ```
 
-One MCP server, query any DB via `run_database_query(sql, database_name?)`.  
+One MCP server, query any DB via `run_database_query(sql, database_name?)`.
 **Default DB:** Derived from `backend/.secrets.toml` as `TENANT_NAME` + `_` + `DEPLOYMENT_ENV` (e.g. `crackerbarrel_prod`, `lesliespool_dev`). Ensure that key exists in `mcp_server/databases.json`.
 
 ---

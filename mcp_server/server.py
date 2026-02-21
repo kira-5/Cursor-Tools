@@ -12,8 +12,10 @@ Categories: docs, project_info, db, search, env, git, logs, bitbucket, postman
 - git: git_status, git_branches, recent_commits
 - logs: tail_logs, read_log_file (default: logs/app.log)
 """
+
 import os
 from pathlib import Path
+
 
 def get_project_root() -> Path:
     """
@@ -24,15 +26,16 @@ def get_project_root() -> Path:
     """
     if env_root := os.getenv("CURSOR_PROJECT_ROOT"):
         return Path(env_root).resolve()
-        
+
     # Search upwards from CWD
     current = Path.cwd().resolve()
     for parent in [current] + list(current.parents):
         if (parent / ".git").exists() or (parent / ".cursor").exists():
             return parent
-            
+
     # Fallback
     return Path(__file__).resolve().parent.parent
+
 
 PROJECT_ROOT = get_project_root()
 
@@ -67,19 +70,20 @@ mcp = FastMCP(
 )
 
 
+from tools_bitbucket import register as register_bitbucket
+from tools_db import register as register_db
+
 # Register tools by category (one file per category)
 from tools_docs import register as register_docs
-from tools_project_info import register as register_project_info
-from tools_db import register as register_db
-from tools_search import register as register_search
 from tools_env import register as register_env
-from tools_git import register as register_git
-from tools_logs import register as register_logs
-from tools_bitbucket import register as register_bitbucket
-from tools_postman import register as register_postman
-from tools_google_search import register as register_google_search
 from tools_fetch import register as register_fetch
+from tools_git import register as register_git
+from tools_google_search import register as register_google_search
+from tools_logs import register as register_logs
 from tools_memory import register as register_memory
+from tools_postman import register as register_postman
+from tools_project_info import register as register_project_info
+from tools_search import register as register_search
 
 register_docs(mcp, _enabled)
 register_project_info(mcp, _enabled)
@@ -106,9 +110,18 @@ def mcp_health_check() -> str:
     # 2. Categories
     status.append("\nTool Categories:")
     all_categories = [
-        "docs", "project_info", "db", "search", "env",
-        "git", "logs", "bitbucket", "postman",
-        "google_search", "fetch", "memory"
+        "docs",
+        "project_info",
+        "db",
+        "search",
+        "env",
+        "git",
+        "logs",
+        "bitbucket",
+        "postman",
+        "google_search",
+        "fetch",
+        "memory",
     ]
     for cat in all_categories:
         icon = "🟢" if _enabled(cat) else "⚪"

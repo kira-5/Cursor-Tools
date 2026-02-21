@@ -1,4 +1,5 @@
 """DB category: list_databases, run_database_query, run_database_query_from_file."""
+
 import json
 import os
 import re
@@ -20,8 +21,10 @@ for _db_env in [_MCP_DIR / ".db_env"]:
 
 def _substitute_env(s: str) -> str:
     """Replace ${env:VAR} with os.environ.get('VAR', ''). Keeps secrets out of committed files."""
+
     def repl(m):
         return os.environ.get(m.group(1), "")
+
     return re.sub(r"\$\{env:(\w+)\}", repl, s)
 
 
@@ -34,17 +37,21 @@ def _load_databases():
         data = json.loads(config_file.read_text())
         dbs = data.get("databases", data)
         return {k: _substitute_env(v) for k, v in dbs.items()}
-    except (json.JSONDecodeError, KeyError):
+    except json.JSONDecodeError, KeyError:
         return {}
 
 
 def _get_default_database():
     """Get default database name from backend .secrets.toml: TENANT_NAME + '_' + DEPLOYMENT_ENV."""
-    for path in [PROJECT_ROOT / "backend" / ".secrets.toml", PROJECT_ROOT / ".secrets.toml"]:
+    for path in [
+        PROJECT_ROOT / "backend" / ".secrets.toml",
+        PROJECT_ROOT / ".secrets.toml",
+    ]:
         if not path.exists():
             continue
         try:
             import tomllib
+
             with open(path, "rb") as f:
                 data = tomllib.load(f)
             merged = {}
@@ -65,6 +72,7 @@ def _get_default_database():
 
 def _format_table(columns: list, rows: list, database_name: str) -> str:
     """Format query result as a scrollable Markdown table for chat."""
+
     def _fmt(v):
         if v is None:
             return ""
@@ -84,6 +92,7 @@ def _format_table(columns: list, rows: list, database_name: str) -> str:
 
 def register(mcp, enabled_fn):
     """Register db tools. Disabled when 'db' category is off. Disabling db turns off all: list_databases, run_database_query, run_database_query_from_file, list_tables, describe_table."""
+
     @mcp.tool()
     def list_databases() -> str:
         """List all available database connections defined in mcp_server/databases.json. Use these names as targets for SQL queries."""
@@ -95,7 +104,11 @@ def register(mcp, enabled_fn):
         return "\n".join(sorted(dbs.keys()))
 
     @mcp.tool()
-    def run_database_query(sql: str | None = None, database_name: str | None = None, output_file: str | None = "queries/result.md") -> str:
+    def run_database_query(
+        sql: str | None = None,
+        database_name: str | None = None,
+        output_file: str | None = "queries/result.md",
+    ) -> str:
         """Execute a read-only SQL query against a target database. If sql is omitted, reads from queries/query.sql. Results are returned as Markdown tables and optionally written to output_file."""
         if not enabled_fn("db"):
             return "Tool disabled. Enable 'db' in CURSOR_TOOLS_ENABLED (e.g. docs,project_info,db)."
@@ -139,7 +152,9 @@ def register(mcp, enabled_fn):
         except Exception as e:
             msg = f"Database connection/query error: {e}"
             if "connection refused" in str(e).lower():
-                msg += "\n\nTip: Verification failed. Is the DB host reachable from your current network (VPN required?)"
+                msg += (
+                    "\n\nTip: Verification failed. Is the DB host reachable from your current network (VPN required?)"
+                )
             return msg
 
     @mcp.tool()
@@ -170,13 +185,14 @@ def register(mcp, enabled_fn):
                 return f"No database specified. Pass database_name or set TENANT_NAME+DEPLOYMENT_ENV. Available: {', '.join(sorted(dbs.keys()))}"
         if database_name not in dbs:
             return f"Unknown database: {database_name}. Available: {', '.join(sorted(dbs.keys()))}"
-        sql = f"""
+        sql = """
             SELECT table_schema, table_name
             FROM information_schema.tables
             WHERE table_schema = %s AND table_type = 'BASE TABLE'
             ORDER BY table_schema, table_name
         """
         import psycopg2
+
         try:
             with psycopg2.connect(dbs[database_name]) as conn:
                 conn.set_session(readonly=True)
@@ -211,6 +227,7 @@ def register(mcp, enabled_fn):
             ORDER BY ordinal_position
         """
         import psycopg2
+
         try:
             with psycopg2.connect(dbs[database_name]) as conn:
                 conn.set_session(readonly=True)

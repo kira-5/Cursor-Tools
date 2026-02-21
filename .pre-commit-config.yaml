@@ -1,0 +1,182 @@
+---
+# Pre-commit configuration for cursor-tools MCP server
+# Grouped by: Sanity, Security, Formatting, Linting
+
+# Set fail_fast to true to stop as soon as one hook fails
+fail_fast: true
+
+default_language_version:
+  python: python3.14
+
+repos:
+  # ===========================================================================
+  # 1. GLOBAL SANITY & HYGIENE
+  # ===========================================================================
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: check-added-large-files
+        name: 📂 Check Large Files
+        args: ["--maxkb=500"]
+      - id: check-yaml
+        name: 📦 Validate YAML
+      - id: check-toml
+        name: 📦 Validate TOML
+      - id: check-ast
+        name: 🔍 Check Python Syntax (AST)
+      - id: check-docstring-first
+        name: 📝 Check Docstring Placement
+      - id: end-of-file-fixer
+        name: 🔚 Fix End of Files
+      - id: trailing-whitespace
+        name: ✂️  Trim Trailing Whitespace
+      - id: mixed-line-ending
+        name: 📏 Fix Line Endings (LF)
+        args: [--fix=lf]
+      - id: check-case-conflict
+        name: 🔠 Check Case Conflicts
+      - id: debug-statements
+        name: 🚫 Check for Debuggers
+      - id: check-merge-conflict
+        name: ⚔️  Check Merge Conflicts
+      - id: pretty-format-json
+        name: 📦 Format JSON
+        args: ["--no-sort-keys", "--autofix"]
+        exclude: uv.lock
+
+  - repo: local
+    hooks:
+      - id: check-commit-msg
+        name: 📝 Check Commit Message
+        description: Enforces Conventional Commits standards.
+        entry: >
+          bash -c '
+          commit_msg=$(cat "$1");
+          valid_regex="^(build|chore|ci|docs|feat|fix|perf|refactor|revert|style|test)(\([a-z0-9-]+\))?!?: .+$";
+          if [[ ! "$commit_msg" =~ $valid_regex ]]; then
+              echo -e "\n❌ ERROR: Invalid commit message format.";
+              echo -e "📝 Conventional Commits required: <type>(<scope>): <description>";
+              echo -e "🌿 Allowed types: feat, fix, docs, refactor, chore, test, etc.";
+              echo -e "\n💡 ACTION REQUIRED: Fix your message using:";
+              echo -e "   git commit --amend\n";
+              exit 1;
+          fi'
+        language: system
+        stages: [commit-msg]
+
+  # ===========================================================================
+  # 2. SECURITY GUARDRAILS
+  # ===========================================================================
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: detect-private-key
+        name: 🔑 Detect Private Keys
+
+  - repo: https://github.com/Yelp/detect-secrets
+    rev: v1.5.0
+    hooks:
+      - id: detect-secrets
+        name: 🕵️  Detect Secrets
+        args: ["--baseline", "mcp_server/.secrets.baseline"]
+        exclude: mcp_server/.secrets.baseline
+
+  - repo: https://github.com/PyCQA/bandit
+    rev: 1.9.3
+    hooks:
+      - id: bandit
+        name: 🛡️  Security Audit (Bandit)
+        args: ["-r", "-lll"]
+        files: ^mcp_server/.*\.py$
+
+  # ===========================================================================
+  # 3. FORMATTING (Auto-Fixers)
+  # ===========================================================================
+  - repo: https://github.com/psf/black
+    rev: 26.1.0
+    hooks:
+      - id: black
+        name: ✨ Black Formatter
+        files: ^mcp_server/.*\.py$
+
+  - repo: https://github.com/pycqa/isort
+    rev: 6.0.0
+    hooks:
+      - id: isort
+        name: 🗂️  Sort Imports
+        files: ^mcp_server/.*\.py$
+
+  - repo: https://github.com/PyCQA/autoflake
+    rev: v2.3.2
+    hooks:
+      - id: autoflake
+        name: 🚿 Clean Unused Imports/Vars
+        args:
+          - "--remove-all-unused-imports"
+          - "--remove-unused-variables"
+          - "--expand-star-imports"
+          - "--ignore-init-module-imports"
+          - "--in-place"
+          - "--recursive"
+        files: ^mcp_server/.*\.py$
+
+  # ===========================================================================
+  # 4. LINTING & MODERNIZATION
+  # ===========================================================================
+  - repo: https://github.com/PyCQA/flake8
+    rev: 7.3.0
+    hooks:
+      - id: flake8
+        name: 🐍 Flake8 (Style Guide)
+        args: ["--max-line-length=120", "--ignore=F841,W503,E203,E501,E402"]
+        files: ^mcp_server/.*\.py$
+
+  - repo: https://github.com/asottile/pyupgrade
+    rev: v3.21.2
+    hooks:
+      - id: pyupgrade
+        name: 🆙 Modernize Python Syntax
+        types: [python]
+        args: ["--py314-plus"]
+        files: ^mcp_server/.*\.py$
+
+  # ===========================================================================
+  # 5. ADVANCED VALIDATION
+  # ===========================================================================
+  - repo: https://github.com/abravalheri/validate-pyproject
+    rev: v0.25
+    hooks:
+      - id: validate-pyproject
+        name: 📋 Validate pyproject.toml
+
+  - repo: https://github.com/adrienverge/yamllint
+    rev: v1.38.0
+    hooks:
+      - id: yamllint
+        name: 🧱 Lint YAML
+        args: ["-d", "{extends: default, rules: {line-length: {max: 120}}}"]
+
+  # ===========================================================================
+  # 6. COMPLETION MESSAGE
+  # ===========================================================================
+  - repo: local
+    hooks:
+      - id: post-pre-commit-message
+        name: ✅ Success Message
+        entry: >-
+          bash -c 'echo -e "\n✨ Quality Gate passed! All pre-commit hooks clear.\n\n🚀 Next steps: git add . &&
+          git commit -m \"feat: <description>\" && git push origin $(git branch --show-current)\n"'
+        language: system
+        always_run: true
+        pass_filenames: false
+        verbose: true
+
+ci:
+  autofix_commit_msg: "chore(pre-commit): automated quality gate fixes [pre-commit.ci]"
+  autofix_prs: true
+  autoupdate_commit_msg: "chore(pre-commit): ⬆ pre-commit autoupdate [pre-commit.ci]"
+  autoupdate_schedule: weekly
+  show_diff_on_failure: true
+  submodules: false
+  max_parallel: 4
+  retry_failed_hooks: 2

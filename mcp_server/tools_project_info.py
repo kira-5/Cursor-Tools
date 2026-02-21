@@ -1,9 +1,11 @@
 """Project info category: get_project_info (name, version, Python, tech stack)."""
+
 import os
 import re
 from pathlib import Path
 
 _MCP_DIR = Path(__file__).resolve().parent
+
 
 def get_project_root() -> Path:
     if env_root := os.getenv("CURSOR_PROJECT_ROOT"):
@@ -13,6 +15,7 @@ def get_project_root() -> Path:
         if (parent / ".git").exists() or (parent / ".cursor").exists():
             return parent
     return _MCP_DIR.parent
+
 
 PROJECT_ROOT = get_project_root()
 
@@ -25,10 +28,14 @@ def _get_version() -> str | None:
         m = re.search(r'version\s*=\s*["\']([^"\']+)["\']', text, re.I)
         if m:
             return m.group(1)
-    for p in [PROJECT_ROOT / "backend" / "pyproject.toml", PROJECT_ROOT / "pyproject.toml"]:
+    for p in [
+        PROJECT_ROOT / "backend" / "pyproject.toml",
+        PROJECT_ROOT / "pyproject.toml",
+    ]:
         if p.exists():
             try:
                 import tomllib
+
                 with open(p, "rb") as f:
                     data = tomllib.load(f)
                 v = data.get("tool", {}).get("poetry", {}).get("version")
@@ -46,10 +53,14 @@ def _get_python_version() -> str | None:
             m = re.search(r'python_requires\s*=\s*["\']([^"\']+)["\']', p.read_text(), re.I)
             if m:
                 return m.group(1)
-    for p in [PROJECT_ROOT / "pyproject.toml", PROJECT_ROOT / "backend" / "pyproject.toml"]:
+    for p in [
+        PROJECT_ROOT / "pyproject.toml",
+        PROJECT_ROOT / "backend" / "pyproject.toml",
+    ]:
         if p.exists():
             try:
                 import tomllib
+
                 with open(p, "rb") as f:
                     data = tomllib.load(f)
                 py = data.get("tool", {}).get("poetry", {}).get("dependencies", {}).get("python")
@@ -60,7 +71,10 @@ def _get_python_version() -> str | None:
     for p in [PROJECT_ROOT / "runtime.txt", PROJECT_ROOT / "backend" / "runtime.txt"]:
         if p.exists():
             return p.read_text().strip()
-    for p in [PROJECT_ROOT / ".python-version", PROJECT_ROOT / "backend" / ".python-version"]:
+    for p in [
+        PROJECT_ROOT / ".python-version",
+        PROJECT_ROOT / "backend" / ".python-version",
+    ]:
         if p.exists():
             return p.read_text().strip()
     return None
@@ -68,7 +82,11 @@ def _get_python_version() -> str | None:
 
 def _get_project_name() -> str | None:
     """Get project name from readme or setup.py."""
-    for readme in [PROJECT_ROOT / "readme.md", PROJECT_ROOT / "README.md", PROJECT_ROOT / "backend" / "README.md"]:
+    for readme in [
+        PROJECT_ROOT / "readme.md",
+        PROJECT_ROOT / "README.md",
+        PROJECT_ROOT / "backend" / "README.md",
+    ]:
         if readme.exists():
             first = readme.read_text().splitlines()[0].strip()
             if first.startswith("#"):
@@ -100,6 +118,7 @@ def register(mcp, enabled_fn):
         if not enabled_fn("project_info"):
             return "Tool disabled. Enable 'project_info' in CURSOR_TOOLS_ENABLED."
         import json
+
         info = {
             "project": _get_project_name() or "unknown",
             "version": _get_version() or "unknown",

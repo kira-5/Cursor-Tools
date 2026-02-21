@@ -1,4 +1,5 @@
 """Search category: grep_code, search_docs."""
+
 import os
 import re
 from pathlib import Path

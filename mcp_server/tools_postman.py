@@ -1,7 +1,9 @@
 """Postman category: workspaces, collections, environments, and runs."""
+
 import json
 import os
 import shutil
+import ssl
 import subprocess
 import tempfile
 import urllib.error
@@ -10,9 +12,35 @@ import urllib.request
 from pathlib import Path
 from typing import Any
 
+
+def _build_ssl_context() -> ssl.SSLContext:
+    """Build SSL context using certifi if available, else default.
+    Resolves macOS 'Basic Constraints of CA cert not marked critical' error.
+    Set POSTMAN_SSL_VERIFY=false in .postman_env to disable verification (last resort).
+    """
+    if os.environ.get("POSTMAN_SSL_VERIFY", "true").lower() == "false":
+        ctx = ssl.create_default_context()
+        ctx.check_hostname = False
+        ctx.verify_mode = ssl.CERT_NONE
+        return ctx
+    try:
+        import certifi
+
+        return ssl.create_default_context(cafile=certifi.where())
+    except ImportError:
+        pass
+    return ssl.create_default_context()
+
+
 _MCP_DIR = Path(__file__).resolve().parent
 _BASE_URL = "https://api.getpostman.com"
 _DISABLED_MSG = "Tool disabled. Enable 'postman' in CURSOR_TOOLS_ENABLED."
+
+# Name-to-local-file mapping for hybrid sync
+_LOCAL_COLLECTION_MAP = {
+    "BaseSmart": "BaseSmart.postman_collection.json",
+    "Scratchpad": "Scratchpad.postman_collection.json",
+}
 
 # Load mcp_server/.postman_env into os.environ
 _POSTMAN_ENV = _MCP_DIR / ".postman_env"
@@ -47,7 +75,7 @@ def _api_json(method: str, path: str, params: dict | None = None, body: dict | N
         headers["Content-Type"] = "application/json"
     req = urllib.request.Request(url, data=data, method=method, headers=headers)
     try:
-        with urllib.request.urlopen(req, timeout=20) as resp:
+        with urllib.request.urlopen(req, timeout=20, context=_build_ssl_context()) as resp:
             text = resp.read().decode("utf-8", errors="ignore")
         if not text:
             return True, {}
@@ -147,6 +175,152 @@ def _build_request(
     return request
 
 
+# ---------------------------------------------------------------------------
+# Hybrid Sync Helpers
+# Detect and update local collection files, then run update_postman.sh.
+# Falls back silently if local project structure is absent (e.g. on team machines).
+# ---------------------------------------------------------------------------
+
+
+def _find_local_collection(collection_name: str) -> Path | None:
+    """Try to resolve a local postman collection JSON file by name.
+    Searches upward from cwd for `postman/collections/<file>`."""
+    filename = _LOCAL_COLLECTION_MAP.get(collection_name)
+    if not filename:
+        return None
+    cwd = Path.cwd()
+    # Search cwd and up to 4 parent directories
+    for candidate in [cwd, *cwd.parents[:4]]:
+        path = candidate / "postman" / "collections" / filename
+        if path.exists():
+            return path
+    return None
+
+
+def _collection_name_from_uid(collection_uid: str) -> str | None:
+    """Fetch the collection name from Postman Cloud by uid."""
+    ok, data = _api_json("GET", f"/collections/{collection_uid}")
+    if not ok or not isinstance(data, dict):
+        return None
+    info = (data.get("collection") or {}).get("info") or {}
+    return info.get("name")
+
+
+def _run_update_script(project_root: Path) -> str:
+    """Run update_postman.sh to sync local → cloud."""
+    script = project_root / "postman" / "scripts" / "update_postman.sh"
+    if not script.exists():
+        return "(local sync script not found, cloud sync skipped)"
+    try:
+        proc = subprocess.run(
+            ["bash", str(script)],
+            capture_output=True,
+            text=True,
+            timeout=30,
+            cwd=str(project_root),
+        )
+        out = (proc.stdout or "") + (proc.stderr or "")
+        return out[-1000:] if out else "(no output)"
+    except Exception as e:
+        return f"(sync script error: {e})"
+
+
+def _local_add_request(
+    collection_name: str,
+    request_path: str,
+    method: str,
+    url: str,
+    headers: dict | None = None,
+    body: str | dict | list | None = None,
+    description: str | None = None,
+) -> tuple[bool, str]:
+    """Add a request to a local collection JSON. Returns (success, message)."""
+    local_path = _find_local_collection(collection_name)
+    if not local_path:
+        return False, f"No local file found for '{collection_name}'."
+    try:
+        raw = local_path.read_text(encoding="utf-8")
+        data = json.loads(raw)
+        collection = data.get("collection") or data
+        items = collection.get("item") or []
+        parts = _split_path(request_path)
+        if not parts:
+            return False, "request_path is required."
+        parent_items = _ensure_folder(items, parts[:-1])
+        request_item = {
+            "name": parts[-1],
+            "request": _build_request(method, url, headers=headers, body=body, description=description),
+            "response": [],
+        }
+        parent_items.append(request_item)
+        collection["item"] = items
+        if "collection" in data:
+            data["collection"] = collection
+        local_path.write_text(json.dumps(data, indent=4, ensure_ascii=False), encoding="utf-8")
+        # Trigger cloud sync
+        sync_out = _run_update_script(local_path.parent.parent.parent)
+        return (
+            True,
+            f"✅ Local file updated at {local_path}.\n📡 Cloud sync:\n{sync_out}",
+        )
+    except Exception as e:
+        return False, f"Local update failed: {e}"
+
+
+def _local_update_request(
+    collection_name: str,
+    request_path: str,
+    method: str | None = None,
+    url: str | None = None,
+    headers: dict | None = None,
+    body: str | dict | list | None = None,
+    description: str | None = None,
+    rename_to: str | None = None,
+) -> tuple[bool, str]:
+    """Update a request in a local collection JSON. Returns (success, message)."""
+    local_path = _find_local_collection(collection_name)
+    if not local_path:
+        return False, f"No local file found for '{collection_name}'."
+    try:
+        raw = local_path.read_text(encoding="utf-8")
+        data = json.loads(raw)
+        collection = data.get("collection") or data
+        items = collection.get("item") or []
+        _parent, item = _find_item_by_path(items, _split_path(request_path))
+        if not item or "request" not in item:
+            return False, "Request not found in local file."
+        req = item.get("request") or {}
+        if method:
+            req["method"] = method.upper()
+        if url:
+            req["url"] = url
+        if headers is not None:
+            req["header"] = _headers_to_list(headers)
+        if description is not None:
+            req["description"] = description
+        if body is not None:
+            if isinstance(body, (dict, list)):
+                body = json.dumps(body)
+            req["body"] = {"mode": "raw", "raw": body}
+        item["request"] = req
+        if rename_to:
+            item["name"] = rename_to
+        collection["item"] = items
+        if "collection" in data:
+            data["collection"] = collection
+        local_path.write_text(json.dumps(data, indent=4, ensure_ascii=False), encoding="utf-8")
+        sync_out = _run_update_script(local_path.parent.parent.parent)
+        return (
+            True,
+            f"✅ Local file updated at {local_path}.\n📡 Cloud sync:\n{sync_out}",
+        )
+    except Exception as e:
+        return False, f"Local update failed: {e}"
+
+
+# ---------------------------------------------------------------------------
+
+
 def _snapshot_paths(items: list) -> list[str]:
     snapshot = []
     for entry in _walk_items(items):
@@ -216,9 +390,7 @@ def _find_items(items: list, query: str, case_sensitive: bool = False) -> list:
 def _pick_item(items: list, name: str, case_sensitive: bool = False) -> dict | None:
     matches = _find_items(items, name, case_sensitive=case_sensitive)
     for entry in matches:
-        if (entry.get("name") == name) or (
-            not case_sensitive and entry.get("name", "").lower() == name.lower()
-        ):
+        if (entry.get("name") == name) or (not case_sensitive and entry.get("name", "").lower() == name.lower()):
             return entry
     return matches[:1][0] if matches else None
 
@@ -670,7 +842,13 @@ def register(mcp, enabled_fn):
         description: str | None = None,
         dry_run: bool = False,
     ) -> str:
-        """Add a request to a collection at the given path."""
+        """Add a request to a collection at the given path.
+
+        🔄 HYBRID SYNC: If a local Postman project exists (postman/collections/),
+        this tool will update the local JSON file AND push to Postman Cloud.
+        On machines without a local project (e.g. team members), it falls back
+        to cloud-only mode.
+        """
         if not enabled_fn("postman"):
             return _DISABLED_MSG
         ok, data = _api_json("GET", f"/collections/{collection_uid}")
@@ -690,11 +868,28 @@ def register(mcp, enabled_fn):
         request_item = {
             "name": parts[-1],
             "request": _build_request(method, url, headers=headers, body=body, description=description),
+            "response": [],
         }
         parent_items.append(request_item)
         collection["item"] = items
         if dry_run:
             return _dry_run_summary(before, items, note="Dry-run only. No changes saved.")
+
+        # 🔄 HYBRID SYNC: Try local-first approach
+        collection_name = (collection.get("info") or {}).get("name", "")
+        local_ok, local_msg = _local_add_request(
+            collection_name,
+            request_path,
+            method,
+            url,
+            headers=headers,
+            body=body,
+            description=description,
+        )
+        if local_ok:
+            return f"🔄 Hybrid Sync completed.\n{local_msg}"
+
+        # Fallback: Cloud-only (for team members without local project)
         ok, updated = _api_json("PUT", f"/collections/{collection_uid}", body={"collection": collection})
         updated, err = _require_dict(ok, updated)
         if err:
@@ -714,7 +909,13 @@ def register(mcp, enabled_fn):
         rename_to: str | None = None,
         dry_run: bool = False,
     ) -> str:
-        """Update a request in a collection by path."""
+        """Update a request in a collection by path.
+
+        🔄 HYBRID SYNC: If a local Postman project exists (postman/collections/),
+        this tool will update the local JSON file AND push to Postman Cloud.
+        On machines without a local project (e.g. team members), it falls back
+        to cloud-only mode.
+        """
         if not enabled_fn("postman"):
             return _DISABLED_MSG
         ok, data = _api_json("GET", f"/collections/{collection_uid}")
@@ -752,6 +953,23 @@ def register(mcp, enabled_fn):
             if rename_to:
                 note = f"{note} Request will be renamed to {rename_to}."
             return _dry_run_summary(before, items, note=note)
+
+        # 🔄 HYBRID SYNC: Try local-first approach
+        collection_name = (collection.get("info") or {}).get("name", "")
+        local_ok, local_msg = _local_update_request(
+            collection_name,
+            request_path,
+            method=method,
+            url=url,
+            headers=headers,
+            body=body,
+            description=description,
+            rename_to=rename_to,
+        )
+        if local_ok:
+            return f"🔄 Hybrid Sync completed.\n{local_msg}"
+
+        # Fallback: Cloud-only (for team members without local project)
         ok, updated = _api_json("PUT", f"/collections/{collection_uid}", body={"collection": collection})
         updated, err = _require_dict(ok, updated)
         if err:
@@ -819,7 +1037,11 @@ def register(mcp, enabled_fn):
         item["name"] = rename_to
         collection["item"] = items
         if dry_run:
-            return _dry_run_summary(before, items, note=f"Dry-run only. Folder will be renamed to {rename_to}.")
+            return _dry_run_summary(
+                before,
+                items,
+                note=f"Dry-run only. Folder will be renamed to {rename_to}.",
+            )
         ok, updated = _api_json("PUT", f"/collections/{collection_uid}", body={"collection": collection})
         updated, err = _require_dict(ok, updated)
         if err:

@@ -1,4 +1,5 @@
 """Git category: git_status, git_branches, recent_commits."""
+
 import os
 import subprocess
 from pathlib import Path
