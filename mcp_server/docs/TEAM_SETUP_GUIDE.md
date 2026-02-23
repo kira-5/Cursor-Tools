@@ -1,6 +1,6 @@
 # 🚀 Teammate Setup Guide: Cursor-Tools MCP
 
-This guide explains how to get the **Cursor-Tools MCP Server** running in your local Cursor IDE in less than 2 minutes.
+This guide explains how to get the **Cursor-Tools MCP Server** running in less than 2 minutes.
 
 ## 📋 Prerequisites
 
@@ -9,55 +9,63 @@ This guide explains how to get the **Cursor-Tools MCP Server** running in your l
    curl -LsSf https://astral.sh/uv/install.sh | sh
    ```
 
+2. **Sync Dependencies**: Navigate to the server directory and lock the environment.
+   ```bash
+   cd mcp_server && uv sync
+   ```
+
 ---
 
 ## 🛠 Step 1: Add to Your IDE
 
-Depending on which tool you are using, the configuration filename and path will differ:
+Choose the configuration block for your IDE below.
 
-| IDE Mode | Config Filename | Standard Path |
-| :--- | :--- | :--- |
-| **Cursor** | `mcp.json` | `.cursor/mcp.json` |
-| **Antigravity** | `mcp_config.json` | `~/.gemini/antigravity/mcp_config.json` |
+### Option A: Standard (Portable via `uvx`) — RECOMMENDED
 
-### Configuration Details
-
-Add a new server with these details:
-
-### Option A: Standard (via uvx)
-Use this if you just want the tools to work. It installs the server globally via `uvx`.
-
-*   **Name**: `cursor-tools`
-*   **Type**: `command`
-*   **Command**: `uvx --from git+https://github.com/kira-5/Cursor-Tools.git mcp-server`
-*   **Env**: `CURSOR_TOOLS_ENABLED=bitbucket,confluence,db,docs,env,fetch,git,google_search,jira,logs,memory,postman,project_info,search`
-
+#### 1. For Cursor (Add to `.cursor/mcp.json`)
 ```json
 {
   "mcpServers": {
-    "cursor-tools": {
+    "mtp-tools": {
       "command": "uvx",
       "args": [
         "--from",
-        "git+https://github.com/kira-5/Cursor-Tools.git",
+        "/Users/abhisheksingh/Documents/Development/cursor-tools/mcp_server",
         "mcp-server"
       ],
       "env": {
         "CURSOR_TOOLS_ENABLED": "bitbucket,confluence,db,docs,env,fetch,git,google_search,jira,logs,memory,postman,project_info,search"
-      }
+      },
+      "disabled": false
     }
   }
 }
 ```
 
-### Option B: Local Development (Inside cursor-tools Repo)
-Use this if you have the repository cloned and want to test code changes.
+#### 2. For Antigravity (Update `~/.gemini/antigravity/mcp_config.json`)
+```json
+{
+  "mcpServers": {
+    "mtp-tools": {
+      "command": "uvx",
+      "args": [
+        "--from",
+        "/Users/abhisheksingh/Documents/Development/cursor-tools/mcp_server",
+        "mcp-server"
+      ],
+      "env": {
+        "CURSOR_TOOLS_ENABLED": "bitbucket,confluence,db,docs,env,fetch,git,google_search,jira,logs,memory,postman,project_info,search"
+      },
+      "disabled": false
+    }
+  }
+}
+```
 
-*   **Name**: `cursor-tools`
-*   **Type**: `command`
-*   **Command**: `/PATH/TO/YOUR/REPO/mcp_server/.venv-mcp_server/bin/python`
-*   **Args**: `-u`, `/PATH/TO/YOUR/REPO/mcp_server/server.py`
-*   **Env**: `PYTHONPATH=/PATH/TO/YOUR/REPO/mcp_server`
+---
+
+### Option B: Local Expert (Direct Path)
+Use this if you are developing the MCP server code and want to bypass `uvx` caching.
 
 ```json
 {
@@ -72,16 +80,18 @@ Use this if you have the repository cloned and want to test code changes.
         "PYTHONPATH": "/Users/abhisheksingh/Documents/Development/cursor-tools/mcp_server",
         "PYTHONUNBUFFERED": "1",
         "CURSOR_TOOLS_ENABLED": "bitbucket,confluence,db,docs,env,fetch,git,google_search,jira,logs,memory,postman,project_info,search"
-      }
+      },
+      "disabled": false
     }
   }
 }
 ```
+
 ---
 
 ## ⚡️ Step 2: The "Magic" Setup
 
-Once the server is added, simply ask Cursor a question that requires a tool, for example:
+Once the server is added, simply ask your agent a question that requires a tool, for example:
 > "Search Jira for ticket MTP-123"
 
 ### What will happen:
@@ -93,12 +103,11 @@ Once the server is added, simply ask Cursor a question that requires a tool, for
 
 ## 🔑 Step 3: Add Your Secrets
 
-Look at your project sidebar. Open the new `mcp_env_config/` folder and fill in your details:
+Open the new `mcp_env_config/` folder in your project and fill in your details:
 
 *   **`.jira_env`**: Add your email and Atlassian API token.
 *   **`.bitbucket_env`**: Add your Bitbucket username and App Password.
 *   **`.postman_env`**: Add your Postman API key.
-*   **`.google_env`**: Add your Google Search API key (optional).
 
 > [!NOTE]
 > This folder is automatically added to `.gitignore`, so your personal secrets will never be committed to the repo.
@@ -107,6 +116,29 @@ Look at your project sidebar. Open the new `mcp_env_config/` folder and fill in 
 
 ## 🔄 Step 4: Refresh
 
-After you've filled in your secrets, go back to Cursor Settings and click **"Refresh"** (the circular arrow icon) next to the `cursor-tools` server.
+After you've filled in your secrets, go back to your IDE's MCP settings and click **"Refresh"** (the circular arrow icon) next to the `mtp-tools` server.
+
+---
+
+## 💡 Useful Toggle: "disabled"
+
+You can temporarily deactivate the MCP server without deleting its configuration by adding the `"disabled"` key to your JSON block:
+
+```json
+{
+  "mcpServers": {
+    "mtp-tools": {
+      "command": "uvx",
+      "args": [...],
+      "disabled": true
+    }
+  }
+}
+```
+
+*   `"disabled": true`: Server is inactive and tools are hidden.
+*   `"disabled": false`: Server is active (default).
+
+This works identically in both **Cursor** and **Antigravity**.
 
 **You are now ready to go!** 🚀

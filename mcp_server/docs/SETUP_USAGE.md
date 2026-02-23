@@ -33,13 +33,128 @@ Toggle features via the `CURSOR_TOOLS_ENABLED` environment variable in your `mcp
 
 ---
 
-## Quick Reference
+## 📋 Prerequisites
 
-| Need | Guide |
-|------|-------|
-| **Initial Setup** | [TEAM_SETUP_GUIDE.md](file:///Users/abhisheksingh/Documents/Development/cursor-tools/mcp_server/docs/TEAM_SETUP_GUIDE.md) |
-| **All Tools Master List** | [TOOLS_USAGE.md](file:///Users/abhisheksingh/Documents/Development/cursor-tools/mcp_server/docs/TOOLS_USAGE.md) |
-| **Database Queries** | [DB_USAGE.md](file:///Users/abhisheksingh/Documents/Development/cursor-tools/mcp_server/docs/DB_USAGE.md) |
-| **Jira / Confluence** | [JIRA_USAGE.md](file:///Users/abhisheksingh/Documents/Development/cursor-tools/mcp_server/docs/JIRA_USAGE.md) |
-| **Bitbucket / Git** | [BITBUCKET_USAGE.md](file:///Users/abhisheksingh/Documents/Development/cursor-tools/mcp_server/docs/BITBUCKET_USAGE.md) |
-| **Postman** | [POSTMAN_USAGE.md](file:///Users/abhisheksingh/Documents/Development/cursor-tools/mcp_server/docs/POSTMAN_USAGE.md) |
+1. **Install uv**: This project uses `uv` for lightning-fast Python management.
+   ```bash
+   curl -LsSf https://astral.sh/uv/install.sh | sh
+   ```
+
+2. **Sync Dependencies**: Navigate to the server directory and lock the environment.
+   ```bash
+   cd mcp_server && uv sync
+   ```
+
+---
+
+## 🛠 Step 1: Add to Your IDE
+
+Choose the configuration block for your IDE below.
+
+### Option 1: Standard (via `uvx`) — RECOMMENDED
+
+#### 1. For Cursor (Add to `.cursor/mcp.json`)
+```json
+{
+  "mcpServers": {
+    "mtp-tools": {
+      "command": "uvx",
+      "args": [
+        "--from",
+        "/Users/abhisheksingh/Documents/Development/cursor-tools/mcp_server",
+        "mcp-server"
+      ],
+      "env": {
+        "CURSOR_TOOLS_ENABLED": "bitbucket,confluence,db,docs,env,fetch,git,google_search,jira,logs,memory,postman,project_info,search"
+      },
+      "disabled": false
+    }
+  }
+}
+```
+
+#### 2. For Antigravity (Update `~/.gemini/antigravity/mcp_config.json`)
+```json
+{
+  "mcpServers": {
+    "mtp-tools": {
+      "command": "uvx",
+      "args": [
+        "--from",
+        "/Users/abhisheksingh/Documents/Development/cursor-tools/mcp_server",
+        "mcp-server"
+      ],
+      "env": {
+        "CURSOR_TOOLS_ENABLED": "bitbucket,confluence,db,docs,env,fetch,git,google_search,jira,logs,memory,postman,project_info,search"
+      },
+      "disabled": false
+    }
+  }
+}
+```
+
+---
+
+### Option 2: Local Expert (Direct Path)
+Use this if you are developing the MCP server code and want to bypass `uvx` caching.
+
+```json
+{
+  "mcpServers": {
+    "cursor-tools-local": {
+      "command": "/Users/abhisheksingh/Documents/Development/cursor-tools/mcp_server/.venv-mcp_server/bin/python",
+      "args": [
+        "-u",
+        "/Users/abhisheksingh/Documents/Development/cursor-tools/mcp_server/server.py"
+      ],
+      "env": {
+        "PYTHONPATH": "/Users/abhisheksingh/Documents/Development/cursor-tools/mcp_server",
+        "PYTHONUNBUFFERED": "1",
+        "CURSOR_TOOLS_ENABLED": "bitbucket,confluence,db,docs,env,fetch,git,google_search,jira,logs,memory,postman,project_info,search"
+      },
+      "disabled": false
+    }
+  }
+}
+```
+
+---
+
+## ⚡️ Step 2: Secret Management
+
+Once the server is added, it will automatically create a folder called `mcp_env_config/` in your project root upon first use. Open that folder and fill in your details:
+
+*   **`.jira_env`**: Add your email and Atlassian API token.
+*   **`.bitbucket_env`**: Add your Bitbucket username and App Password.
+*   **`.postman_env`**: Add your Postman API key.
+
+---
+
+## 🔄 Step 4: Refresh
+
+After you've filled in your secrets, go back to your IDE's MCP settings and click **"Refresh"** (the circular arrow icon) next to the `mtp-tools` server.
+
+---
+
+## 💡 Useful Toggle: "disabled"
+
+You can temporarily deactivate the MCP server without deleting its configuration by adding the `"disabled"` key to your JSON block:
+
+```json
+{
+  "mcpServers": {
+    "mtp-tools": {
+      "command": "uvx",
+      "args": [...],
+      "disabled": true
+    }
+  }
+}
+```
+
+*   `"disabled": true`: Server is inactive and tools are hidden.
+*   `"disabled": false`: Server is active (default).
+
+This works identically in both **Cursor** and **Antigravity**.
+
+**You are now ready to go!** 🚀

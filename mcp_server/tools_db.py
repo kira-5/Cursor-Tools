@@ -45,7 +45,7 @@ def _load_databases():
         data = json.loads(config_file.read_text())
         dbs = data.get("databases", data)
         return {k: _substitute_env(v) for k, v in dbs.items()}
-    except json.JSONDecodeError, KeyError:
+    except (json.JSONDecodeError, KeyError):
         return {}
 
 

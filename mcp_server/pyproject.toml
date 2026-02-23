@@ -1,8 +1,8 @@
 [project]
 name = "cursor-tools-mcp"
-version = "0.1.0"
+version = "0.1.1"
 description = "MCP server for mtp-base-pricing backend"
-requires-python = ">=3.14"
+requires-python = ">=3.10"
 dependencies = ["mcp>=1.0.0", "requests", "python-dotenv"]
 
 [project.scripts]
@@ -17,7 +17,7 @@ packages = ["."]
 
 [tool.black]
 line-length = 120
-target-version = ["py314"]
+target-version = ["py310"]
 
 [tool.isort]
 profile = "black"
