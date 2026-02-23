@@ -3,7 +3,7 @@ MCP Server for cursor-tools backend.
 Exposes tools and resources for Cursor to use.
 Copy to other projects; toggle by category via CURSOR_TOOLS_ENABLED env var.
 
-Categories: docs, project_info, db, search, env, git, logs, bitbucket, postman
+Categories: docs, project_info, db, search, env, git, logs, bitbucket, postman, google_search, fetch, memory, jira, confluence
 - docs: get_docs_urls, get_doc, cursor-index, readme, mcp-readme, mcp-setup, mcp-tools-reference, email-template
 - project_info: get_project_info (name, version, Python, tech stack)
 - db: list_databases, run_database_query, run_database_query_from_file, list_tables, describe_table (disable db = all db tools off)
@@ -48,10 +48,10 @@ if str(_path) not in __import__("sys").path:
 from mcp.server.fastmcp import FastMCP
 
 # Category-based toggles. Default: all. Omit a category to disable it.
-# docs, project_info, db, search, env, git, logs, bitbucket, postman
+# docs, project_info, db, search, env, git, logs, bitbucket, postman, google_search, fetch, memory, jira, confluence
 _ENABLED = os.getenv(
     "CURSOR_TOOLS_ENABLED",
-    "docs,project_info,db,search,env,git,logs,bitbucket,postman,google_search,fetch,memory",
+    "docs,project_info,db,search,env,git,logs,bitbucket,postman,google_search,fetch,memory,jira,confluence",
 ).split(",")
 _ENABLED = {t.strip() for t in _ENABLED if t.strip()}
 
@@ -71,6 +71,7 @@ mcp = FastMCP(
 
 
 from tools_bitbucket import register as register_bitbucket
+from tools_confluence import register as register_confluence
 from tools_db import register as register_db
 
 # Register tools by category (one file per category)
@@ -79,6 +80,7 @@ from tools_env import register as register_env
 from tools_fetch import register as register_fetch
 from tools_git import register as register_git
 from tools_google_search import register as register_google_search
+from tools_jira import register as register_jira
 from tools_logs import register as register_logs
 from tools_memory import register as register_memory
 from tools_postman import register as register_postman
@@ -93,6 +95,8 @@ register_env(mcp, _enabled)
 register_git(mcp, _enabled)
 register_logs(mcp, _enabled)
 register_bitbucket(mcp, _enabled)
+register_jira(mcp, _enabled)
+register_confluence(mcp, _enabled)
 register_postman(mcp, _enabled)
 register_google_search(mcp, _enabled)
 register_fetch(mcp, _enabled)
@@ -122,6 +126,8 @@ def mcp_health_check() -> str:
         "google_search",
         "fetch",
         "memory",
+        "jira",
+        "confluence",
     ]
     for cat in all_categories:
         icon = "🟢" if _enabled(cat) else "⚪"

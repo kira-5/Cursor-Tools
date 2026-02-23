@@ -1,17 +1,20 @@
 # Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual Environments
 .venv/
 venv/
-__pycache__/
-*.pyc
-*.pyo
+env/
+mcp_server/.venv-mcp_server/
 
-# OS
+# IDE / Editor
+.cursor/
+.vscode/
+
+# OS / Mac
 .DS_Store
 
 # MCP secrets - do not commit
-*/.db_env
-*/.bitbucket_env
-*/.postman_env
-.cursor/
-# Python Virtual Environment (mcp_server)
-mcp_server/.venv-mcp_server/
+.*_env

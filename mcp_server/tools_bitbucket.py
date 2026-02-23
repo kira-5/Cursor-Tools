@@ -23,12 +23,12 @@ if _BITBUCKET_ENV.exists():
 
 def _get_auth_headers() -> tuple[dict, str | None]:
     """Build auth header from env. Returns (headers, error)."""
-    username = os.environ.get("BITBUCKET_USERNAME")
-    password = os.environ.get("BITBUCKET_PASSWORD")
-    if not username or not password:
-        return {}, "Missing BITBUCKET_USERNAME or BITBUCKET_PASSWORD."
-    token = base64.b64encode(f"{username}:{password}".encode()).decode("utf-8")
-    return {"Authorization": f"Basic {token}"}, None
+    email = os.environ.get("BITBUCKET_EMAIL")
+    token = os.environ.get("BITBUCKET_API_TOKEN")
+    if not email or not token:
+        return {}, "Missing BITBUCKET_EMAIL or BITBUCKET_API_TOKEN."
+    token_str = base64.b64encode(f"{email}:{token}".encode()).decode("utf-8")
+    return {"Authorization": f"Basic {token_str}"}, None
 
 
 def _get_workspace(workspace: str | None) -> tuple[str | None, str | None]:

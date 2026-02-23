@@ -15,6 +15,7 @@ Click any category below for a detailed guide on available tools, example prompt
 | **postman** | Local Collection Lifecycle | [POSTMAN_USAGE.md](file:///Users/abhisheksingh/Documents/Development/cursor-tools/mcp_server/docs/POSTMAN_USAGE.md) |
 | **bitbucket** | Repository Governance | [BITBUCKET_USAGE.md](file:///Users/abhisheksingh/Documents/Development/cursor-tools/mcp_server/docs/BITBUCKET_USAGE.md) |
 | **git** | Local state & history | [GIT_USAGE.md](file:///Users/abhisheksingh/Documents/Development/cursor-tools/mcp_server/docs/GIT_USAGE.md) |
+| **jira** | Atlassian Issue Tracking | [JIRA_USAGE.md](file:///Users/abhisheksingh/Documents/Development/cursor-tools/mcp_server/docs/JIRA_USAGE.md) |
 | **search** | Precision code grepping | [SEARCH_USAGE.md](file:///Users/abhisheksingh/Documents/Development/cursor-tools/mcp_server/docs/SEARCH_USAGE.md) |
 | **google_search** | Web Research | [GOOGLE_SEARCH_USAGE.md](file:///Users/abhisheksingh/Documents/Development/cursor-tools/mcp_server/docs/GOOGLE_SEARCH_USAGE.md) |
 | **fetch** | Web Extraction | [FETCH_USAGE.md](file:///Users/abhisheksingh/Documents/Development/cursor-tools/mcp_server/docs/FETCH_USAGE.md) |
