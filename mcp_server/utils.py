@@ -2,50 +2,72 @@ import os
 from pathlib import Path
 
 
-def get_project_root() -> Path:
+def _find_repo_root(start: Path) -> Path | None:
+    """Walk up from start; return first directory that has .git or .cursor."""
+    start = start.resolve()
+    for parent in [start] + list(start.parents):
+        if (parent / ".git").exists() or (parent / ".cursor").exists():
+            return parent
+    return None
+
+
+def get_project_root(start_path: Path | None = None) -> Path:
     """
-    Detect project root by:
-    1. Checking CURSOR_PROJECT_ROOT env var.
-    2. Searching upwards from CWD for .git or .cursor.
-    3. Fallback to CWD (but avoid returning / if possible).
-    4. Last resort: User's home directory.
+    Detect project root in an IDE-agnostic way:
+
+    1. Explicit env: MCP_PROJECT_ROOT or CURSOR_PROJECT_ROOT (any IDE can set these).
+    2. Search upward from start_path (default: CWD) for .git or .cursor.
+    3. If start_path is None and CWD search fails, search from this file's package dir.
+    4. Fallback to CWD, then home directory.
+
+    Pass start_path=mcp_dir when resolving config so the repo containing the MCP
+    server is found regardless of which IDE started the process or what CWD is.
     """
-    # 1. Explicit environment variable
-    if env_root := os.getenv("CURSOR_PROJECT_ROOT"):
-        return Path(env_root).resolve()
+    for env_var in ("MCP_PROJECT_ROOT", "CURSOR_PROJECT_ROOT"):
+        if env_root := os.getenv(env_var):
+            return Path(env_root).resolve()
 
     try:
-        # 2. Search upwards from CWD
-        current = Path.cwd().resolve()
-        for parent in [current] + list(current.parents):
-            if (parent / ".git").exists() or (parent / ".cursor").exists():
-                return parent
-
-        # 3. Fallback to CWD if it's not root
+        current = (start_path or Path.cwd()).resolve()
+        root = _find_repo_root(current)
+        if root is not None:
+            return root
+        if start_path is None:
+            pkg_dir = Path(__file__).resolve().parent
+            root = _find_repo_root(pkg_dir)
+            if root is not None:
+                return root
         if current.as_posix() != "/":
             return current
     except Exception:
         pass
-
-    # 4. Final fallback to home directory to avoid read-only / errors
     return Path.home()
 
 
 def setup_config_file(filename: str, mcp_dir: Path, template: str) -> Path:
     """
-    Finds or creates a configuration file in the following order of precedence:
-    1. PROJECT_ROOT/mcp_env_config/{filename}
-    2. {mcp_dir}/env_config/{filename}
+    Finds or creates a configuration file. IDE-agnostic: project root is resolved
+    from the repo containing mcp_dir (or MCP_PROJECT_ROOT / CURSOR_PROJECT_ROOT).
+
+    Precedence:
+    1. {mcp_dir}/env_config/{filename}  (package/repo default – use this for real credentials)
+    2. PROJECT_ROOT/mcp_env_config/{filename}  (project root override)
 
     If the file does not exist in any of these locations, it is created at
     PROJECT_ROOT/mcp_env_config/{filename} using the provided template.
     """
-    project_root = get_project_root()
+    # Resolve project root from repo containing the MCP server (works in any IDE)
+    project_root = get_project_root(mcp_dir)
     env_config_dir = project_root / "mcp_env_config"
-    mcp_env_config_fallback = mcp_dir / "env_config"
+    mcp_package_env = mcp_dir / "env_config"
 
-    # Check possible locations
-    locations = [env_config_dir / filename, mcp_env_config_fallback / filename]
+    # When MCP_PROJECT_ROOT/CURSOR_PROJECT_ROOT is set, prefer repo's mcp_server/env_config
+    # (uvx may run from cache so mcp_dir can be outside the repo)
+    locations = [mcp_package_env / filename, env_config_dir / filename]
+    if os.environ.get("MCP_PROJECT_ROOT") or os.environ.get("CURSOR_PROJECT_ROOT"):
+        repo_mcp_env = project_root / "mcp_server" / "env_config" / filename
+        if repo_mcp_env.exists():
+            locations.insert(0, repo_mcp_env)
 
     for loc in locations:
         if loc.exists():

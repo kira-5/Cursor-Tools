@@ -1,11 +1,16 @@
 # Jira Integration (`jira`)
 
 This MCP server provides a native integration with the Atlassian Jira REST API.
-It allows Cursor (and other clients) to read, search, and write to Jira projects directly from the IDE.
+It allows Cursor (and other IDE clients) to read, search, and write to Jira projects directly from the editor.
 
 ## Configuration
 
-To use the Jira tools, you must populate the `.jira_env` file in the `mcp_env_config/` directory at the root of your project:
+Config is loaded from (in order):
+
+1. **`[Project root]/mcp_env_config/.jira_env`** – per-project overrides (create this folder if you want overrides).
+2. **`mcp_server/env_config/.jira_env`** – default location in this repo (works in any IDE; project root is detected from the MCP server’s location).
+
+To use the Jira tools, ensure `.jira_env` exists in one of the above and contains:
 
 ```env
 JIRA_HOST=https://yourcompany.atlassian.net
@@ -15,9 +20,11 @@ JIRA_DEFAULT_PROJECT=MTP
 JIRA_DEFAULT_COMPONENTS=PriceSmart-BasePricing
 ```
 
-**Note:** If the file is missing, it will be automatically created with a template inside `mcp_env_config/` on the first run.
+**IDE-agnostic:** If your IDE starts the MCP server with a different working directory, the server still finds the repo that contains `mcp_server` and uses `mcp_server/env_config/.jira_env`. You can override the project root by setting **`MCP_PROJECT_ROOT`** (or `CURSOR_PROJECT_ROOT`) to your repo path in the MCP server’s environment.
 
-**Note:** You can quickly create an Atlassian API Token by visiting:
+**Note:** If no `.jira_env` exists anywhere, a template is created at `mcp_env_config/.jira_env` on first run.
+
+**Note:** Create an Atlassian API Token at:
 [https://id.atlassian.com/manage-profile/security/api-tokens](https://id.atlassian.com/manage-profile/security/api-tokens)
 
 ## Available Tools

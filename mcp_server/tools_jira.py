@@ -323,6 +323,25 @@ def register(mcp, enabled_fn):  # noqa: ANN001
             fields["labels"] = [lbl.strip() for lbl in labels.split(",")]
         if comps:
             fields["components"] = [{"name": c.strip()} for c in comps.split(",")]
+
+        # Force reload environment to pick up new custom field keys
+        load_env_file(".jira_env", _MCP_DIR, _JIRA_ENV_TEMPLATE)
+
+        # Support IA-specific custom fields from environment
+        custom_comp = os.environ.get("JIRA_CUSTOM_FIELD_COMPONENT")
+        custom_sub = os.environ.get("JIRA_CUSTOM_FIELD_SUB_COMPONENT")
+        custom_client = os.environ.get("JIRA_CUSTOM_FIELD_CLIENT")
+        custom_prod = os.environ.get("JIRA_CUSTOM_FIELD_PRODUCT")
+
+        if custom_comp:
+            fields["customfield_10570"] = {"value": custom_comp}
+        if custom_sub:
+            fields["customfield_10571"] = {"value": custom_sub}
+        if custom_client:
+            fields["customfield_10582"] = [{"value": custom_client}]
+        if custom_prod:
+            fields["customfield_10768"] = {"value": custom_prod}
+
         ok, raw = _api("POST", "/issue", body={"fields": fields})
         if not ok:
             return raw

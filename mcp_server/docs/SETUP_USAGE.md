@@ -8,11 +8,14 @@
 This MCP server (`mtp-tools`) provides a centralized hub for project documentation, database introspection, and integration with external services (Jira, Confluence, Bitbucket, Postman, etc.).
 
 ### 1. Unified Configuration
-The server now uses a standardized configuration flow:
+The server uses a standardized configuration flow that works in **any IDE** (Cursor, VS Code, JetBrains, etc.):
+
 1. **Priority 1**: `[Project Root]/mcp_env_config/` (Local overrides, git-ignored)
 2. **Priority 2**: `[MCP Package]/env_config/` (Package defaults)
 
-To configure your credentials, simply duplicate the templates created in `mcp_env_config/` at the root of your project after the first run.
+Project root is detected from the repo that contains the MCP server, so config is found even when the IDE starts the server with a different working directory. You can override it by setting **`MCP_PROJECT_ROOT`** (or `CURSOR_PROJECT_ROOT`) to your repo path in the MCP server’s environment.
+
+To configure your credentials, add your env files under `mcp_server/env_config/` or (for overrides) create `mcp_env_config/` at the root of your project and add the same files there.
 
 ### 2. Available Categories
 Toggle features via the `CURSOR_TOOLS_ENABLED` environment variable in your `mcp.json`.
