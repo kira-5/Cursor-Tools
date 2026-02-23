@@ -9,22 +9,25 @@ import urllib.request
 from pathlib import Path
 
 _MCP_DIR = Path(__file__).resolve().parent
+from utils import get_project_root, load_env_file
+
+PROJECT_ROOT = get_project_root()
+
+_JIRA_ENV_TEMPLATE = """
+JIRA_EMAIL="your_email@example.com"
+JIRA_API_TOKEN="your_jira_api_token"
+JIRA_HOST="https://your-domain.atlassian.net"
+JIRA_DEFAULT_PROJECT="PROJ"  # Optional: Default project key for new issues
+"""
 
 # Load mcp_server/.jira_env into os.environ
-_JIRA_ENV = _MCP_DIR / ".jira_env"
-if _JIRA_ENV.exists():
-    for line in _JIRA_ENV.read_text().splitlines():
-        line = line.strip()
-        if "#" in line:
-            line = line[: line.index("#")].strip()
-        if line and "=" in line:
-            k, _, v = line.partition("=")
-            os.environ.setdefault(k.strip(), v.strip().strip('"').strip("'"))
+load_env_file(".jira_env", _MCP_DIR, _JIRA_ENV_TEMPLATE)
 
 
 # ---------------------------------------------------------------------------
 # Internal helpers
 # ---------------------------------------------------------------------------
+
 
 def _get_auth_headers() -> tuple[dict, str | None]:
     email = os.environ.get("JIRA_EMAIL")
@@ -46,9 +49,7 @@ def _get_host() -> tuple[str, str | None]:
     return host, None
 
 
-def _api(
-    method: str, path: str, body: dict | None = None, params: dict | None = None
-) -> tuple[bool, str]:
+def _api(method: str, path: str, body: dict | None = None, params: dict | None = None) -> tuple[bool, str]:
     """Call Jira REST API v3. Returns (ok, json_string_or_error)."""
     host, err = _get_host()
     if err:
@@ -105,6 +106,7 @@ def _agile_api(method: str, path: str, params: dict | None = None) -> tuple[bool
 # Data trimmers
 # ---------------------------------------------------------------------------
 
+
 def _extract_adf_text(node: dict | None) -> str:
     """Recursively extract plain text from Atlassian Document Format (ADF)."""
     if not node:
@@ -119,16 +121,12 @@ def _trim_issue(issue: dict) -> dict:
     fields = issue.get("fields") or {}
     assignee = fields.get("assignee") or {}
     reporter = fields.get("reporter") or {}
-    status = (fields.get("status") or {})
-    priority = (fields.get("priority") or {})
-    issue_type = (fields.get("issuetype") or {})
+    status = fields.get("status") or {}
+    priority = fields.get("priority") or {}
+    issue_type = fields.get("issuetype") or {}
     labels = fields.get("labels") or []
     raw_desc = fields.get("description")
-    desc_text = (
-        _extract_adf_text(raw_desc)
-        if isinstance(raw_desc, dict)
-        else (raw_desc or "")
-    )
+    desc_text = _extract_adf_text(raw_desc) if isinstance(raw_desc, dict) else (raw_desc or "")
     host = os.environ.get("JIRA_HOST", "").rstrip("/")
     return {
         "key": issue.get("key"),
@@ -170,6 +168,7 @@ def _trim_sprint(sprint: dict) -> dict:
 # Tool registration
 # ---------------------------------------------------------------------------
 
+
 def register(mcp, enabled_fn):  # noqa: ANN001
     """Register Jira tools. Disabled when 'jira' category is off."""
 
@@ -200,10 +199,20 @@ def register(mcp, enabled_fn):  # noqa: ANN001
         """
         if not enabled_fn("jira"):
             return "Tool disabled. Add 'jira' to CURSOR_TOOLS_ENABLED."
-        field_list = fields.split(",") if fields else [
-            "summary", "status", "assignee", "reporter",
-            "priority", "issuetype", "labels", "description",
-        ]
+        field_list = (
+            fields.split(",")
+            if fields
+            else [
+                "summary",
+                "status",
+                "assignee",
+                "reporter",
+                "priority",
+                "issuetype",
+                "labels",
+                "description",
+            ]
+        )
         body: dict = {"jql": jql, "maxResults": max_results, "fields": field_list}
         ok, raw = _api("POST", "/search/jql", body=body)
         if not ok:
@@ -302,7 +311,8 @@ def register(mcp, enabled_fn):  # noqa: ANN001
         }
         if description:
             fields["description"] = {
-                "type": "doc", "version": 1,
+                "type": "doc",
+                "version": 1,
                 "content": [{"type": "paragraph", "content": [{"type": "text", "text": description}]}],
             }
         if assignee_account_id:
@@ -343,7 +353,8 @@ def register(mcp, enabled_fn):  # noqa: ANN001
             fields["summary"] = summary
         if description:
             fields["description"] = {
-                "type": "doc", "version": 1,
+                "type": "doc",
+                "version": 1,
                 "content": [{"type": "paragraph", "content": [{"type": "text", "text": description}]}],
             }
         if priority:
@@ -370,7 +381,8 @@ def register(mcp, enabled_fn):  # noqa: ANN001
             return "Tool disabled. Add 'jira' to CURSOR_TOOLS_ENABLED."
         body = {
             "body": {
-                "type": "doc", "version": 1,
+                "type": "doc",
+                "version": 1,
                 "content": [{"type": "paragraph", "content": [{"type": "text", "text": comment}]}],
             }
         }
@@ -378,11 +390,14 @@ def register(mcp, enabled_fn):  # noqa: ANN001
         if not ok:
             return raw
         data = json.loads(raw)
-        return json.dumps({
-            "comment_id": data.get("id"),
-            "author": (data.get("author") or {}).get("displayName"),
-            "created": data.get("created"),
-        }, indent=2)
+        return json.dumps(
+            {
+                "comment_id": data.get("id"),
+                "author": (data.get("author") or {}).get("displayName"),
+                "created": data.get("created"),
+            },
+            indent=2,
+        )
 
     @mcp.tool()
     def jira_transition_issue(issue_key: str, transition_name: str) -> str:

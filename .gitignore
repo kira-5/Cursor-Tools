@@ -18,3 +18,4 @@ mcp_server/.venv-mcp_server/
 
 # MCP secrets - do not commit
 .*_env
+mcp_env_config/

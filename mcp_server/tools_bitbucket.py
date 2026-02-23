@@ -9,25 +9,45 @@ import urllib.request
 from pathlib import Path
 
 _MCP_DIR = Path(__file__).resolve().parent
+from utils import get_project_root, load_env_file
+
+PROJECT_ROOT = get_project_root()
+
 _BASE_URL = "https://api.bitbucket.org/2.0"
 
+_BITBUCKET_ENV_TEMPLATE = """
+# App Password needs read/write for Pull Requests and Repositories
+BITBUCKET_USERNAME="your_username"
+BITBUCKET_APP_PASSWORD="your_app_password"  # pragma: allowlist secret
+BITBUCKET_WORKSPACE="your_workspace"  # Default Optional
+"""
+
 # Load mcp_server/.bitbucket_env into os.environ
-_BITBUCKET_ENV = _MCP_DIR / ".bitbucket_env"
-if _BITBUCKET_ENV.exists():
-    for line in _BITBUCKET_ENV.read_text().splitlines():
-        line = line.strip()
-        if line and not line.startswith("#") and "=" in line:
-            k, _, v = line.partition("=")
-            os.environ.setdefault(k.strip(), v.strip().strip('"').strip("'"))
+load_env_file(".bitbucket_env", _MCP_DIR, _BITBUCKET_ENV_TEMPLATE)
 
 
 def _get_auth_headers() -> tuple[dict, str | None]:
     """Build auth header from env. Returns (headers, error)."""
-    email = os.environ.get("BITBUCKET_EMAIL")
-    token = os.environ.get("BITBUCKET_API_TOKEN")
-    if not email or not token:
-        return {}, "Missing BITBUCKET_EMAIL or BITBUCKET_API_TOKEN."
-    token_str = base64.b64encode(f"{email}:{token}".encode()).decode("utf-8")
+    # Try new names first
+    username = os.environ.get("BITBUCKET_USERNAME")
+    password = os.environ.get("BITBUCKET_APP_PASSWORD")
+
+    # Fallback to legacy names
+    if not username:
+        username = os.environ.get("BITBUCKET_EMAIL")
+    if not password:
+        password = os.environ.get("BITBUCKET_API_TOKEN")
+
+    # DEBUG
+    # print(f"DEBUG: username={username}, password={'set' if password else 'not set'}")
+
+    if not username or not password:
+        return (
+            {},
+            f"--- BITBUCKET AUTH ERROR V2 --- Missing BITBUCKET_USERNAME or BITBUCKET_APP_PASSWORD (or legacy BITBUCKET_EMAIL/BITBUCKET_API_TOKEN). os.environ keys: {[k for k in os.environ if 'BITBUCKET' in k]}",
+        )
+
+    token_str = base64.b64encode(f"{username}:{password}".encode()).decode("utf-8")
     return {"Authorization": f"Basic {token_str}"}, None
 
 

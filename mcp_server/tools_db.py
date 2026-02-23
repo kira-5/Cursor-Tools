@@ -6,17 +6,18 @@ import re
 from pathlib import Path
 
 _MCP_DIR = Path(__file__).resolve().parent
-PROJECT_ROOT = Path(os.environ.get("CURSOR_PROJECT_ROOT", _MCP_DIR.parent))
+from utils import get_project_root, load_env_file, setup_config_file
+
+PROJECT_ROOT = get_project_root()
+
+_DB_ENV_TEMPLATE = """
+# Example DB credentials
+# DB_USER="admin"
+# DB_PASS="secret123"  # pragma: allowlist secret
+"""
 
 # Load mcp_server/.db_env into os.environ (for ${env:VAR} in databases.json)
-for _db_env in [_MCP_DIR / ".db_env"]:
-    if _db_env.exists():
-        for line in _db_env.read_text().splitlines():
-            line = line.strip()
-            if line and not line.startswith("#") and "=" in line:
-                k, _, v = line.partition("=")
-                os.environ[k.strip()] = v.strip().strip('"').strip("'")
-        break
+load_env_file(".db_env", _MCP_DIR, _DB_ENV_TEMPLATE)
 
 
 def _substitute_env(s: str) -> str:
@@ -30,7 +31,14 @@ def _substitute_env(s: str) -> str:
 
 def _load_databases():
     """Load database connection strings from mcp_server/databases.json. Supports ${env:VAR} for secrets."""
-    config_file = _MCP_DIR / "databases.json"
+    databases_template = """
+{
+  "local_db": "postgresql://postgres:postgres@localhost:5432/mydb",  # pragma: allowlist secret
+  "prod_db": "postgresql://${env:DB_USER}:${env:DB_PASS}@prod.host.com:5432/proddb"
+}
+"""
+    config_file = setup_config_file("databases.json", _MCP_DIR, databases_template)
+
     if not config_file.exists():
         return {}
     try:

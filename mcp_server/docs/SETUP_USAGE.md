@@ -1,133 +1,45 @@
 # MCP Setup Summary
 
-## Project Level (Global Managed via cursor-tools)
+> [!IMPORTANT]
+> For the most up-to-date teammate setup instructions, please refer to the **[TEAM_SETUP_GUIDE.md](file:///Users/abhisheksingh/Documents/Development/cursor-tools/mcp_server/docs/TEAM_SETUP_GUIDE.md)**.
 
-**Location:** `.cursor/mcp.json` (in cursor-tools)
+## Overview
 
-**Location:** `.cursor/mcp.json` (in cursor-tools)
+This MCP server (`mtp-tools`) provides a centralized hub for project documentation, database introspection, and integration with external services (Jira, Confluence, Bitbucket, Postman, etc.).
 
-| Server | Purpose |
-|--------|---------|
-| **mtp-tools** | Docs URLs, tech stack, cursor-docs-index, README |
-| **leslies-dev-postgres-db** | PostgreSQL (leslies_dev @ 10.75.0.2:5432) |
+### 1. Unified Configuration
+The server now uses a standardized configuration flow:
+1. **Priority 1**: `[Project Root]/mcp_env_config/` (Local overrides, git-ignored)
+2. **Priority 2**: `[MCP Package]/env_config/` (Package defaults)
 
-**Config:**
-```json
-{
-  "mcpServers": {
-    "mtp-tools": {
-      "command": "/path/to/mcp_server/.venv/bin/python",
-      "args": ["-u", "/path/to/mcp_server/server.py"],
-      "env": {
-        "PYTHONPATH": "/path/to/cursor-tools",
-        "PYTHONUNBUFFERED": "1",
-        "CURSOR_TOOLS_ENABLED": "docs,tech_stack,db"
-      }
-    },
-    "leslies-dev-postgres-db": {
-      "command": "npx",
-      "args": ["-y", "@modelcontextprotocol/server-postgres", "postgresql://user:pass@host:port/dbname"]  # pragma: allowlist secret
-    }
-  }
-}
-```
+To configure your credentials, simply duplicate the templates created in `mcp_env_config/` at the root of your project after the first run.
 
----
+### 2. Available Categories
+Toggle features via the `CURSOR_TOOLS_ENABLED` environment variable in your `mcp.json`.
 
-## What You Can Do With These Servers
-
-### 1. leslies-dev-postgres-db (1 tool, 18 resources)
-
-**Database-related tasks:**
-- Run SQL queries
-- Inspect tables and schemas
-- Get data from the leslies_dev database
-- Explore the base_pricing schema
-- Debug data and relationships
-
-**Example prompts:**
-- "Query the top 10 rows from base_pricing.bp_actions"
-- "List all tables in base_pricing schema"
-- "Find records where X"
-
----
-
-### 2. mtp-tools (3 categories: docs, tech_stack, db)
-
-**Toggle categories:** `CURSOR_TOOLS_ENABLED=docs,tech_stack,db` (omit to disable)
-- **docs:** get_docs_urls, cursor-docs-index, readme
-- **tech_stack:** get_tech_stack
-- **db:** list_databases, run_database_query
-- **google_search:** Native web research
-- **fetch:** Native URL to Markdown
-- **memory:** Native project persistence
-
-**Project-related tasks:**
-- **get_docs_urls** – Get Cursor docs URLs (FastAPI, Pydantic, etc.)
-- **get_tech_stack** – Get backend/requirements.txt
-- **list_databases** – List available database names from mcp_server/databases.json
-- **run_database_query** – Run SQL (sql, database_name?). Default DB from TENANT_NAME_DEPLOYMENT_ENV in .secrets.toml
-- **Resources** – Access cursor-docs-index.json and README
-
-**Example prompts:**
-- "What docs should I add to Cursor?"
-- "Show me our tech stack"
-- "List available databases"
-- "Run SELECT * FROM base_pricing.bp_actions LIMIT 5" (uses default from .secrets.toml)
-- "Run SELECT 1 on leslies_dev" (explicit database)
-
----
-
-## Multi-Database Setup (mtp-tools)
-
-Configure multiple databases in `mcp_server/databases.json` (see `mcp_server/databases.json.example`):
-
-```json
-{
-  "databases": {
-    "leslies_dev": "postgresql://user:pass@host:port/dbname",  # pragma: allowlist secret
-    "another_db": "postgresql://user:pass@host:port/dbname"  # pragma: allowlist secret
-  }
-}
-```
-
-One MCP server, query any DB via `run_database_query(sql, database_name?)`.
-**Default DB:** Derived from `backend/.secrets.toml` as `TENANT_NAME` + `_` + `DEPLOYMENT_ENV` (e.g. `crackerbarrel_prod`, `lesliespool_dev`). Ensure that key exists in `mcp_server/databases.json`.
+| Category | Description |
+|----------|-------------|
+| `docs` | Architectural docs and READMEs |
+| `project_info` | Tech stack and requirements |
+| `db` | SQL queries and table introspection |
+| `search` | Precision code grepping |
+| `bitbucket` | PRs and repo management |
+| `jira` | Issue tracking |
+| `confluence` | Page search and content |
+| `postman` | API management |
+| `google_search` | Native web research |
+| `fetch` | URL to Markdown conversion |
+| `memory` | Cross-chat project persistence |
 
 ---
 
 ## Quick Reference
 
-| Need | Server / Tool |
-|------|---------------|
-| Run SQL on any configured DB | mtp-tools → run_database_query |
-| List available databases | mtp-tools → list_databases |
-| Postgres MCP (table resources) | leslies-dev-postgres-db |
-| Docs URLs / tech stack / README | mtp-tools |
-
----
-
-## Folder Strategy
-
-| Folder | Git Host | MCP Servers |
-|--------|----------|-------------|
-| `~/Documents/Work/` | Bitbucket | mtp-tools, leslies-dev-postgres-db (project-specific) |
-| `~/Documents/Development/` | Personal GitHub | github (with personal token) – add when needed |
-
----
-
-## Summary
-
-| Level | Servers |
-|-------|---------|
-| **Project (Central Hub)** | 1 (cursor-tools: includes Fetch, Memory, Search) |
-
-
-mtp-tools MCP list
-Type	Name	Toggle ID	Purpose
-Tool	get_docs_urls	get_docs_urls	Cursor docs URLs
-Tool	get_tech_stack	get_tech_stack	Read backend/requirements.txt
-Tool	list_databases	list_databases	List DB names from databases.json
-Tool	run_database_query	run_database_query	Run read-only SQL
-Resource	mtp://docs/cursor-index	cursor_docs_index	cursor-docs-index.json
-Resource	mtp://project/readme	readme	Project README
+| Need | Guide |
+|------|-------|
+| **Initial Setup** | [TEAM_SETUP_GUIDE.md](file:///Users/abhisheksingh/Documents/Development/cursor-tools/mcp_server/docs/TEAM_SETUP_GUIDE.md) |
+| **All Tools Master List** | [TOOLS_USAGE.md](file:///Users/abhisheksingh/Documents/Development/cursor-tools/mcp_server/docs/TOOLS_USAGE.md) |
+| **Database Queries** | [DB_USAGE.md](file:///Users/abhisheksingh/Documents/Development/cursor-tools/mcp_server/docs/DB_USAGE.md) |
+| **Jira / Confluence** | [JIRA_USAGE.md](file:///Users/abhisheksingh/Documents/Development/cursor-tools/mcp_server/docs/JIRA_USAGE.md) |
+| **Bitbucket / Git** | [BITBUCKET_USAGE.md](file:///Users/abhisheksingh/Documents/Development/cursor-tools/mcp_server/docs/BITBUCKET_USAGE.md) |
+| **Postman** | [POSTMAN_USAGE.md](file:///Users/abhisheksingh/Documents/Development/cursor-tools/mcp_server/docs/POSTMAN_USAGE.md) |

@@ -1,10 +1,11 @@
 """Logs category: tail_logs, read_log_file. Default: logs/app.log."""
 
-import os
 from pathlib import Path
 
 _MCP_DIR = Path(__file__).resolve().parent
-PROJECT_ROOT = Path(os.environ.get("CURSOR_PROJECT_ROOT", _MCP_DIR.parent))
+from utils import get_project_root
+
+PROJECT_ROOT = get_project_root()
 DEFAULT_LOG = "logs/app.log"
 
 

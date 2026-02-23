@@ -1,11 +1,12 @@
 """Search category: grep_code, search_docs."""
 
-import os
 import re
 from pathlib import Path
 
 _MCP_DIR = Path(__file__).resolve().parent
-PROJECT_ROOT = Path(os.environ.get("CURSOR_PROJECT_ROOT", _MCP_DIR.parent))
+from utils import get_project_root
+
+PROJECT_ROOT = get_project_root()
 
 # Directories to skip when searching code
 _IGNORE_DIRS = {".git", "__pycache__", ".venv", "venv", "node_modules", ".cursor"}

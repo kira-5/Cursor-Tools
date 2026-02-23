@@ -1,11 +1,12 @@
 """Git category: git_status, git_branches, recent_commits."""
 
-import os
 import subprocess
 from pathlib import Path
 
 _MCP_DIR = Path(__file__).resolve().parent
-PROJECT_ROOT = Path(os.environ.get("CURSOR_PROJECT_ROOT", _MCP_DIR.parent))
+from utils import get_project_root
+
+PROJECT_ROOT = get_project_root()
 
 
 def _run_git(args: list[str]) -> str:

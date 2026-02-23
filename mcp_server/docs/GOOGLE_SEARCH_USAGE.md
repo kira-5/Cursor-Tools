@@ -14,7 +14,8 @@ Native high-performance web research within Cursor.
 - "Google the error: `PydanticValidationError: field required`."
 
 ## ⚙️ Configuration
-- Requires `GOOGLE_API_KEY` and `GOOGLE_CX` set in the environment or `.env`.
+- Requires `GOOGLE_API_KEY` and `GOOGLE_CX` in `mcp_env_config/.google_env` (at your project root).
+- If the file is missing, it will be automatically created with a template.
 
 ## 🚀 Best Practices
 - Be specific with your query to get the most relevant snippet.

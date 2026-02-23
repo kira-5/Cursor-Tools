@@ -9,23 +9,28 @@ import urllib.request
 from pathlib import Path
 
 _MCP_DIR = Path(__file__).resolve().parent
+from utils import get_project_root, load_env_file
+
+PROJECT_ROOT = get_project_root()
+
+_CONFLUENCE_ENV_TEMPLATE = """
+# Confluence often shares auth with Jira. If you set these, they override Jira settings for Confluence tools.
+# CONFLUENCE_EMAIL="your_email@example.com"
+# CONFLUENCE_API_TOKEN="your_confluence_api_token"
+# CONFLUENCE_HOST="https://your-domain.atlassian.net"
+"""
 
 # Load mcp_server/.jira_env and .confluence_env into os.environ (sharing auth by default but allowing overrides)
-for env_file in [".jira_env", ".confluence_env"]:
-    env_path = _MCP_DIR / env_file
-    if env_path.exists():
-        for line in env_path.read_text().splitlines():
-            line = line.strip()
-            if "#" in line:
-                line = line[: line.index("#")].strip()
-            if line and "=" in line:
-                k, _, v = line.partition("=")
-                os.environ[k.strip()] = v.strip().strip('"').strip("'")
+# Note: Since jira is likely already loaded, we just use a blank template for jira here just in case,
+# but the tools_jira.py loader has the full template.
+load_env_file(".jira_env", _MCP_DIR, "")
+load_env_file(".confluence_env", _MCP_DIR, _CONFLUENCE_ENV_TEMPLATE)
 
 
 # ---------------------------------------------------------------------------
 # Internal helpers
 # ---------------------------------------------------------------------------
+
 
 def _get_auth_headers() -> tuple[dict, str | None]:
     email = os.environ.get("CONFLUENCE_EMAIL") or os.environ.get("JIRA_EMAIL")
@@ -50,9 +55,7 @@ def _get_host() -> tuple[str, str | None]:
     return host, None
 
 
-def _api(
-    method: str, path: str, body: dict | None = None, params: dict | None = None
-) -> tuple[bool, str]:
+def _api(method: str, path: str, body: dict | None = None, params: dict | None = None) -> tuple[bool, str]:
     """Call Confluence REST API v2. Returns (ok, json_string_or_error)."""
     host, err = _get_host()
     if err:
@@ -100,7 +103,7 @@ def _trim_page(page: dict) -> dict:
         "url": f"{host}/wiki{page.get('_links', {}).get('webui', '')}" if "_links" in page else "",
         "content_type": "storage/html" if "storage" in body else "adf",
         "content_length": len(storage.get("value", "")),
-        "content": storage.get("value", "")[:1500] if storage.get("value") else "" # Trimmed representation
+        "content": storage.get("value", "")[:1500] if storage.get("value") else "",  # Trimmed representation
     }
 
 
@@ -120,6 +123,7 @@ def _trim_search_result(result: dict) -> dict:
 # ---------------------------------------------------------------------------
 # Tool registration
 # ---------------------------------------------------------------------------
+
 
 def register(mcp, enabled_fn):  # noqa: ANN001
     """Register Confluence tools. Disabled when 'confluence' category is off."""
@@ -196,17 +200,14 @@ def register(mcp, enabled_fn):  # noqa: ANN001
             "pageId": page_id,
             "body": {
                 "representation": "atlas_doc_format",
-                "value": json.dumps({
-                    "version": 1,
-                    "type": "doc",
-                    "content": [
-                        {
-                            "type": "paragraph",
-                            "content": [{"type": "text", "text": comment_text}]
-                        }
-                    ]
-                })
-            }
+                "value": json.dumps(
+                    {
+                        "version": 1,
+                        "type": "doc",
+                        "content": [{"type": "paragraph", "content": [{"type": "text", "text": comment_text}]}],
+                    }
+                ),
+            },
         }
 
         ok, raw = _api("POST", "/footer-comments", body=body)
@@ -214,11 +215,7 @@ def register(mcp, enabled_fn):  # noqa: ANN001
             return raw
 
         data = json.loads(raw)
-        return json.dumps({
-            "comment_id": data.get("id"),
-            "status": "Created",
-            "pageId": page_id
-        }, indent=2)
+        return json.dumps({"comment_id": data.get("id"), "status": "Created", "pageId": page_id}, indent=2)
 
     @mcp.tool()
     def confluence_create_page(space_id: str, title: str, content_markdown: str, parent_id: str | None = None) -> str:
@@ -233,10 +230,7 @@ def register(mcp, enabled_fn):  # noqa: ANN001
             "spaceId": space_id,
             "status": "current",
             "title": title,
-            "body": {
-                "representation": "storage",
-                "value": content_markdown
-            }
+            "body": {"representation": "storage", "value": content_markdown},
         }
 
         if parent_id:
@@ -252,7 +246,7 @@ def register(mcp, enabled_fn):  # noqa: ANN001
     @mcp.tool()
     def confluence_update_page(page_id: str, title: str, content_markdown: str, version_number: int) -> str:
         """Update an existing Confluence page.
-        IMPORTANT: You must provide the exact NEXT `version_number`. 
+        IMPORTANT: You must provide the exact NEXT `version_number`.
         If the page is currently on version 2, you must pass version_number=3.
         Use confluence_get_page to check the current version before updating.
         Example: confluence_update_page('123456789', 'Updated Title', '<p>New content</p>', 3)
@@ -264,14 +258,8 @@ def register(mcp, enabled_fn):  # noqa: ANN001
             "id": page_id,
             "status": "current",
             "title": title,
-            "body": {
-                "representation": "storage",
-                "value": content_markdown
-            },
-            "version": {
-                "number": version_number,
-                "message": "Updated via MCP"
-            }
+            "body": {"representation": "storage", "value": content_markdown},
+            "version": {"number": version_number, "message": "Updated via MCP"},
         }
 
         ok, raw = _api("PUT", f"/pages/{page_id}", body=body)

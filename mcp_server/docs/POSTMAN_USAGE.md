@@ -18,7 +18,8 @@ Comprehensive API management and local collection execution.
 - "List all collections in my Personal workspace."
 
 ## ⚙️ Configuration
-- Requires `POSTMAN_API_KEY` in `mcp_server/.postman_env`.
+- Requires `POSTMAN_API_KEY` in `mcp_env_config/.postman_env` (at your project root).
+- If the file is missing, a template will be created in `mcp_env_config/` automatically.
 - For `postman_run_collection`, **Newman** must be installed on your system.
 
 ## 🚀 Best Practices

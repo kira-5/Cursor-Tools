@@ -1,10 +1,22 @@
 """Memory MCP tools (Wrapper for official npx server)."""
 
 import json
-from pathlib import Path
+
+from utils import get_project_root
+
+PROJECT_ROOT = get_project_root()
 
 _DISABLED_MSG = "Tool disabled. Enable 'memory' in CURSOR_TOOLS_ENABLED."
-_MEMORY_FILE = Path(__file__).resolve().parent / ".memory.json"
+_MEMORY_FILE = PROJECT_ROOT / "mcp_env_config" / ".memory.json"
+
+# Ensure directory exists
+try:
+    if not _MEMORY_FILE.parent.exists():
+        _MEMORY_FILE.parent.mkdir(exist_ok=True, parents=True)
+except Exception:
+    # If we can't create the directory (e.g. read-only system),
+    # the tool will eventually fail gracefully when trying to write
+    pass
 
 
 def _load_memory():

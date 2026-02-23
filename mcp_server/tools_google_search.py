@@ -4,8 +4,22 @@ import json
 import os
 import urllib.parse
 import urllib.request
+from pathlib import Path
+
+_MCP_DIR = Path(__file__).resolve().parent
+from utils import get_project_root, load_env_file
+
+PROJECT_ROOT = get_project_root()
 
 _DISABLED_MSG = "Tool disabled. Enable 'google_search' in CURSOR_TOOLS_ENABLED."
+
+_GOOGLE_ENV_TEMPLATE = """
+GOOGLE_API_KEY="your_api_key"  # pragma: allowlist secret
+GOOGLE_CX="your_custom_search_engine_id"
+"""
+
+# Load mcp_env_config/.google_env into os.environ
+load_env_file(".google_env", _MCP_DIR, _GOOGLE_ENV_TEMPLATE)
 
 
 def register(mcp, enabled_fn):

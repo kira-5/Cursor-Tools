@@ -21,7 +21,8 @@ Automate repository management, pull requests, and issue tracking.
 - "Fetch the `README.md` from the `develop` branch of `backend-api`."
 
 ## ⚙️ Configuration
-- **Auth**: Requires a Bitbucket App Password stored in `mcp_server/.bitbucket_env`.
+- **Auth**: Requires a Bitbucket App Password stored in `mcp_env_config/.bitbucket_env` (at your project root).
+- **Template**: If the file is missing, it will be automatically created with a template on the first run.
 
 ## 🚀 Best Practices
 - Use `bitbucket_list_repos` first if you aren't sure of the exact `repo_slug`.

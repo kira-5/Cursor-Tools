@@ -5,7 +5,7 @@ It allows Cursor (and other clients) to read, search, and write to Jira projects
 
 ## Configuration
 
-To use the Jira tools, you must populate the `.jira_env` file in the root of the `mcp_server` directory:
+To use the Jira tools, you must populate the `.jira_env` file in the `mcp_env_config/` directory at the root of your project:
 
 ```env
 JIRA_HOST=https://yourcompany.atlassian.net
@@ -14,6 +14,8 @@ JIRA_API_TOKEN=your_atlassian_api_token
 JIRA_DEFAULT_PROJECT=MTP
 JIRA_DEFAULT_COMPONENTS=PriceSmart-BasePricing
 ```
+
+**Note:** If the file is missing, it will be automatically created with a template inside `mcp_env_config/` on the first run.
 
 **Note:** You can quickly create an Atlassian API Token by visiting:
 [https://id.atlassian.com/manage-profile/security/api-tokens](https://id.atlassian.com/manage-profile/security/api-tokens)

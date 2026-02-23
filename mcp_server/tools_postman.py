@@ -33,6 +33,10 @@ def _build_ssl_context() -> ssl.SSLContext:
 
 
 _MCP_DIR = Path(__file__).resolve().parent
+from utils import get_project_root, load_env_file
+
+PROJECT_ROOT = get_project_root()
+
 _BASE_URL = "https://api.getpostman.com"
 _DISABLED_MSG = "Tool disabled. Enable 'postman' in CURSOR_TOOLS_ENABLED."
 
@@ -42,14 +46,12 @@ _LOCAL_COLLECTION_MAP = {
     "Scratchpad": "Scratchpad.postman_collection.json",
 }
 
+_POSTMAN_ENV_TEMPLATE = """
+POSTMAN_API_KEY="your_api_key_here"  # pragma: allowlist secret
+"""
+
 # Load mcp_server/.postman_env into os.environ
-_POSTMAN_ENV = _MCP_DIR / ".postman_env"
-if _POSTMAN_ENV.exists():
-    for line in _POSTMAN_ENV.read_text().splitlines():
-        line = line.strip()
-        if line and not line.startswith("#") and "=" in line:
-            k, _, v = line.partition("=")
-            os.environ.setdefault(k.strip(), v.strip().strip('"').strip("'"))
+load_env_file(".postman_env", _MCP_DIR, _POSTMAN_ENV_TEMPLATE)
 
 
 def _get_auth_headers() -> tuple[dict, str | None]:

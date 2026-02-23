@@ -18,8 +18,9 @@ Direct PostgreSQL introspection and querying. Supports multiple databases via co
 - "Run this query on `leslies_uat`: SELECT * FROM ..."
 
 ## ⚙️ Configuration
-- **Databases**: Mapped in `mcp_server/databases.json`.
-- **Credentials**: Stored in `mcp_server/.db_env`.
+- **Databases**: Mapped in `mcp_env_config/databases.json`.
+- **Credentials**: Stored in `mcp_env_config/.db_env`.
+- **Auto-Scaffolding**: Check `mcp_env_config/` at your project root for templates if files are missing.
 
 ## 🚀 Best Practices
 - Always `list_tables` before assuming a table exists.

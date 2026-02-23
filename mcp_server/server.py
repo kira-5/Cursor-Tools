@@ -16,26 +16,7 @@ Categories: docs, project_info, db, search, env, git, logs, bitbucket, postman, 
 import os
 from pathlib import Path
 
-
-def get_project_root() -> Path:
-    """
-    Detect project root by:
-    1. Checking CURSOR_PROJECT_ROOT env var.
-    2. Searching upwards from CWD for .git or .cursor.
-    3. Fallback to mcp_server's parent.
-    """
-    if env_root := os.getenv("CURSOR_PROJECT_ROOT"):
-        return Path(env_root).resolve()
-
-    # Search upwards from CWD
-    current = Path.cwd().resolve()
-    for parent in [current] + list(current.parents):
-        if (parent / ".git").exists() or (parent / ".cursor").exists():
-            return parent
-
-    # Fallback
-    return Path(__file__).resolve().parent.parent
-
+from utils import get_project_root
 
 PROJECT_ROOT = get_project_root()
 
